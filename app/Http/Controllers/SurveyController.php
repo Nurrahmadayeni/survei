@@ -215,9 +215,86 @@ class SurveyController extends MainController
         return redirect()->intended('/survey');
     }
 
-    public function show($id)
+    public function show()
     {
-        //
+        $id = Input::get('id');
+        $survey = Survey::find($id);
+        if (empty($survey))
+        {
+            return abort('404');
+        }
+        $survey->start_date = date('d-m-Y', strtotime($survey->start_date));
+        $survey->end_date = date('d-m-Y', strtotime($survey->end_date));
+
+        array_push($this->css['pages'], 'global/plugins/bower_components/bootstrap-datepicker-vitalets/css/datepicker.css');
+        array_push($this->js['scripts'], 'global/plugins/bower_components/bootstrap-datepicker-vitalets/js/bootstrap-datepicker.js');
+        array_push($this->js['scripts'], 'global/plugins/bower_components/jquery-validation/dist/jquery.validate.min.js');
+        array_push($this->js['scripts'], 'global/plugins/bower_components/jquery.inputmask/dist/jquery.inputmask.bundle.min.js');
+        array_push($this->js['plugins'], 'global/plugins/bower_components/jquery-ui/jquery-ui.js');
+
+        View::share('css', $this->css);
+        View::share('js', $this->js);
+
+        $upd_mode = 'show';
+        $action_url = 'survey/edit';
+        $page_title = 'Lihat Survey';
+        $disabled = 'disabled';
+
+        $survey->sample = new Collection();
+
+        if(!is_null($survey->student)){
+            $survey->sample->push('student');
+        }
+        if (!is_null($survey['lecture'])){
+            $survey->sample->push('lecture');
+        }
+        if (!is_null($survey['employee'])){
+            $survey->sample->push('employee');
+        }
+
+        $survey_objs = $survey->surveyObjective()->get();
+        $unit_user = "";
+
+        $user_auth = UserAuth::where('username',$this->user_info['username'])->get();
+        $auth = null;
+
+        if($user_auth->contains('auth_type','SU')){
+            $auth = 'SU';
+        }elseif($user_auth->contains('auth_type','OPU')){
+            $auth = 'OPU';
+        }else{
+            $auth = 'OPF';
+        }
+
+        $simsdm = new Simsdm();
+        $units = [];
+
+        if($user_auth->contains('auth_type','SU')){
+            $units = $simsdm->unitAll();
+        }else{
+            foreach ($user_auth as $user){
+                $list_units = $simsdm->unitAll();
+
+                foreach ($list_units as $key=>$unit){
+                    if (is_array($list_units) && !in_array($user->unit, $unit)){
+                        unset($list_units[$key]);
+                    }
+                }
+                $units = array_merge($units, $list_units);
+            }
+        }
+
+        return view('survey.survey-detail', compact(
+            'upd_mode',
+            'action_url',
+            'page_title',
+            'disabled',
+            'auth',
+            'survey',
+            'survey_objs',
+            'units',
+            'unit_user'
+        ));
     }
 
     public function edit()
@@ -304,7 +381,46 @@ class SurveyController extends MainController
 
     public function update(StoreSurveyRequest $request)
     {
-        dd($request);
+        //dd($request);
+        $survey = Survey::find($request->id);
+        $survey->created_by = $this->user_info['username'];
+        $survey->unit = $request->unit;
+        $survey->title = $request->title;
+        $survey->is_subject = $request->is_subject;
+
+        $survey->start_date = date('Y-m-d', strtotime($request->start_date));
+        $survey->end_date = date('Y-m-d', strtotime($request->end_date));
+
+        if($request->is_subject=='0'){
+            foreach ($request->sample as $key => $value) {
+                $survey->$value = '1';
+            }
+        }else{
+            $survey->student = '1';
+        }
+
+        DB::transaction(function () use ($survey, $request){
+            $saved_survey = $survey->save();
+            if($saved_survey){
+                $survey->surveyObjective()->delete();
+                $survey_objs = new Collection();
+
+                foreach ($request->unit_objectives as $key => $item){
+                    $survey_obj = new SurveyObjective();
+                    $survey_obj->objective = $item;
+
+                    $survey_objs->push($survey_obj);
+                }
+
+                if(isset($survey_objs)){
+                    $survey->surveyObjective()->saveMany($survey_objs);
+                }
+            }
+        });
+
+        $request->session()->flash('alert-success', 'Survey berhasil diubah');
+
+        return redirect()->intended('/survey');
     }
 
     public function destroy()

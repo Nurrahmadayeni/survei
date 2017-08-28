@@ -35,15 +35,6 @@
         $j++;
     }
 
-    //dd($survey_objs);
-    //if($key==='sample'){
-      //  $survey['sample'] = new \Illuminate\Support\Collection();
-//        $survey['sample']->push(old($key));
-//    }
-//    if($key==='unit_objectives'){
-//        $survey['unit_objectives'] = new \Illuminate\Support\Collection();
-//        $survey['unit_objectives']->push(old($key));
-//    }
 @endphp
 
 @section('content')
@@ -80,7 +71,7 @@
                             <div class="clearfix"></div>
                         </div><!-- /.panel-heading -->
                         <div id="survey-container" class="panel-body">
-                            @if($upd_mode == 'display')
+                            @if($upd_mode == 'show')
                                 <div class="form-group">
                                     <a href="{{url('survey/edit?id=' . $survey->id)}}"
                                        class="btn btn-success rounded">Ubah</a>
@@ -100,7 +91,7 @@
 
                                 <div id="unit" class="form-group">
                                     <label for="unit" class="control-label">Pilih Unit Survey</label>
-                                    <select class="form-control mb-15 select2" name='unit' id="pilihan" data-placeholder="-- Pilih Unit Survey --" required>
+                                    <select class="form-control mb-15 select2" name='unit' id="pilihan" data-placeholder="-- Pilih Unit Survey --" {{$disabled}} required>
                                         <option value="" disabled="">-- Pilih Unit Survey --</option>
                                         @foreach($units as $unit)
                                             @if(!empty($unit['code']))
@@ -112,7 +103,7 @@
                                 @if($auth != 'OPF')
                                     <div id="unit_objectives" class="form-group">
                                         <label for="unit_objectives" class="control-label">Pilih Tujuan Survey</label>
-                                        <select class="form-control mb-15 select2" multiple="multiple" name='unit_objectives[]' id="pilihan_tujuan" data-placeholder="-- Pilih Tujuan Survey --" required>
+                                        <select class="form-control mb-15 select2" multiple="multiple" name='unit_objectives[]' id="pilihan_tujuan" data-placeholder="-- Pilih Tujuan Survey --" {{$disabled}} required>
                                             @foreach($units as $key=>$unit)
                                                 @if(!empty($unit['code']))
                                                     <option value="{{$unit['code']}}"
@@ -129,11 +120,11 @@
                                     <label for="is_subjective" class="control-label">Apakah survey matakuliah ? </label>
                                     <div>
                                         <div class='rdio radio-inline rdio-theme rounded'>
-                                            <input type='radio' class='radio-inline' id='radio-type-rounded1' required  value='1' {{$survey['is_subject'] == '1' ? "checked" : null}} name="is_subject">
+                                            <input type='radio' class='radio-inline' id='radio-type-rounded1' required  value='1' {{$disabled}} {{$survey['is_subject'] == '1' ? "checked" : null}} name="is_subject">
                                             <label class='is_subject' for='radio-type-rounded1'>YA</label>
                                         </div>
                                         <div class='rdio radio-inline rdio-theme rounded'>
-                                            <input type='radio' class='radio-inline' id='radio-type-rounded2' required  value='0' name="is_subject" {{$survey['is_subject'] == '0' ? "checked" : null}}>
+                                            <input type='radio' class='radio-inline' id='radio-type-rounded2' required  value='0' {{$disabled}} name="is_subject" {{$survey['is_subject'] == '0' ? "checked" : null}}>
                                             <label class='is_subject' for='radio-type-rounded2'>TIDAK</label>
                                         </div>
                                     </div>
@@ -143,7 +134,7 @@
                                     <label for="name-sample" class="control-label">Sampel: </label>
                                     <div class="ckbox ckbox-theme">
                                         <input id="mhs" class="sample" type="checkbox" name="sample[]" value="student"
-                                        {{$survey['sample']->contains('student') == 1 ? 'checked' : null }}>
+                                        {{$survey['sample']->contains('student') == 1 ? 'checked' : null }} {{$disabled}}>
                                         {{--@if(is_array($survey['sample']) && in_array('student', $survey['sample']))--}}
                                             {{--{{'checked'}}@else {{'null'}} @endif--}}
                                         {{-->--}}
@@ -151,7 +142,7 @@
                                     </div>
                                     <div class="ckbox ckbox-theme">
                                         <input id="dsn" class="sample" type="checkbox" name="sample[]" value="lecture"
-                                        {{$survey['sample']->contains('lecture') == 1 ? 'checked' : null }}>
+                                        {{$survey['sample']->contains('lecture') == 1 ? 'checked' : null }} {{$disabled}}>
                                         {{--@if(is_array($survey['sample']) && in_array('lecture', $survey['sample']))--}}
                                             {{--{{'checked'}}@else {{'null'}} @endif--}}
                                         {{-->--}}
@@ -159,7 +150,7 @@
                                     </div>
                                     <div class="ckbox ckbox-theme">
                                         <input id="pgw" class="sample" type="checkbox" name="sample[]" value="employee"
-                                        {{$survey['sample']->contains('employee') == 1 ? 'checked' : null }}>
+                                        {{$survey['sample']->contains('employee') == 1 ? 'checked' : null }} {{$disabled}}>
                                         {{--@if(is_array($survey['sample']) && in_array('employee', $survey['sample']))--}}
                                             {{--{{'checked'}}@else {{'null'}} @endif--}}
                                         {{-->--}}
@@ -177,11 +168,11 @@
                                         <div class="col-md-12">
                                             <div class="form-group">
                                                 @if($disabled == null)
-                                                    <button id="survey-submit" class="btn btn-success rounded"
+                                                    <button id="survey-submit" class="btn btn-success rounded btn-stroke btn-slideright"
                                                             type="submit">Submit
                                                     </button>
+                                                    <a href="{{url('/survey')}}" class="btn btn-danger rounded btn-stroke btn-slideright">Batal</a>
                                                 @endif
-                                                <a href="{{url('/survey')}}" class="btn btn-danger rounded">Batal</a>
                                             </div>
                                         </div>
                                     </div>

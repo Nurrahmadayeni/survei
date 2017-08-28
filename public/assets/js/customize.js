@@ -24,8 +24,8 @@ $(document).ready(function () {
             columnDefs: [
                 {
                     orderable: false,
-                    defaultContent: '<a data-toggle="tooltip" data-placement="top" title="Lihat Pertanyaan"><button class="btn btn-theme btn-sm rounded display"><i class="fa fa-eye" style="color:white;"></i></button></a>' +
-                    '<a data-toggle="tooltip" data-placement="top" title="Tambah Pertanyaan"><button class="btn btn-primary btn-sm rounded add"><i class="fa fa-plus" style="color:white;"></i></button></a>',
+                    defaultContent: '<a data-toggle="tooltip" data-placement="top" title="Lihat Pertanyaan"><button class="btn btn-theme btn-sm btn-slideright rounded display"><i class="fa fa-eye" style="color:white;"></i></button></a>' +
+                    '<a data-toggle="tooltip" data-placement="top" title="Tambah Pertanyaan"><button class="btn btn-primary btn-sm btn-slideright rounded add"><i class="fa fa-plus" style="color:white;"></i></button></a>',
                     targets: target_col_qst
                 },
                 {
@@ -77,7 +77,7 @@ $(document).ready(function () {
             }
             var id = adminDatatable.fnGetData(position)[0];
 
-            window.open(baseUrl + "survey/edit?id=" + id, "_self");
+            window.open(baseUrl + "survey/show?id=" + id, "_self");
         });
 
         $(document).on("click", "#survey-list-admin a button.display", function (e) {

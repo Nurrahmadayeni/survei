@@ -19,6 +19,7 @@ Route::get('survey/ajaxSurveyUser', 'SurveyController@getAjaxSurveyUser');
 Route::get('survey/create', 'SurveyController@create');
 Route::post('survey/create', 'SurveyController@store');
 Route::delete('survey/delete', 'SurveyController@destroy');
+Route::get('survey/show', 'SurveyController@show');
 Route::get('survey/edit', 'SurveyController@edit');
 Route::put('survey/edit', 'SurveyController@update');
 Route::get('survey/report', 'SurveyController@report');
