@@ -20,7 +20,7 @@ class Question extends Model
 
     public function answerType()
     {
-        return $this->belongsTo(AnswerType::class, 'answer_type', 'type');
+        return $this->belongsTo(AnswerType::class, 'answer_type', 'id');
     }
 
     public function userAnswer()

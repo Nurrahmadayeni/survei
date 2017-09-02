@@ -9,6 +9,7 @@
         <meta name="description" content="Sistem Informasi Manajemen Survey Universitas Sumatera Utara">
         <meta name="keywords" content="survey, sistem informasi manajamen survey, usu, universitas sumatera utara">
         <meta name="author" content="PSI USU">
+        <meta name="csrf-token" content="{{ Session::token() }}">
         <title>SURVEY USU - {{$page_title}}</title>
         <!--/ END META SECTION -->
 

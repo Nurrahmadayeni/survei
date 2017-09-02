@@ -73,16 +73,16 @@
                         <div id="survey-container" class="panel-body">
                             @if($upd_mode == 'show')
                                 <div class="form-group">
-                                    <a href="{{url('survey/edit?id=' . $survey->id)}}"
+                                    <a href="{{url('survey/edit/'.$survey->id)}}"
                                        class="btn btn-success rounded">Ubah</a>
                                     <a href="{{url('/')}}" class="btn btn-danger rounded">Batal</a>
                                 </div>
                             @endif
+
                             <form action="{{url($action_url)}}" method="post" enctype="multipart/form-data">
                                 @if($upd_mode != 'create')
                                     <input name="id" type="hidden" value="{{$survey['id']}}">
                                 @endif
-
                                 <input name="auth" type="hidden" value="{{$auth}}">
                                 <input name="upd_mode" type="hidden" value="{{$upd_mode}}" disabled>
                                 @include('layout.input-text', ['passing_variable' => 'title', 'passing_description' => 'Judul Survey'])

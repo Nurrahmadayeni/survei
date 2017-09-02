@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Question;
 use App\Survey;
 use App\SurveyObjective;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
@@ -14,6 +14,7 @@ use App\Simsdm;
 use App\User;
 use App\UserAuth;
 use View;
+use parinpan\fanjwt\libs\JWTAuth;
 
 class SurveyController extends MainController
 {
@@ -111,14 +112,10 @@ class SurveyController extends MainController
     {
         array_push($this->css['pages'], 'global/plugins/bower_components/bootstrap-datepicker-vitalets/css/datepicker.css');
         array_push($this->css['pages'], 'global/plugins/bower_components/bootstrap-daterangepicker/css/daterangepicker.css');
-        array_push($this->css['pages'], 'kartik-v/bootstrap-fileinput/css/fileinput.min.css');
 
         array_push($this->js['scripts'], 'global/plugins/bower_components/bootstrap-datepicker-vitalets/js/bootstrap-datepicker.js');
         array_push($this->js['scripts'], 'global/plugins/bower_components/bootstrap-daterangepicker/js/daterangepicker.js');
         array_push($this->js['scripts'], 'global/plugins/bower_components/jquery-validation/dist/jquery.validate.min.js');
-        array_push($this->js['scripts'], 'kartik-v/bootstrap-fileinput/js/fileinput.min.js');
-        array_push($this->js['scripts'], 'global/plugins/bower_components/jquery.inputmask/dist/jquery.inputmask.bundle.min.js');
-
         array_push($this->js['plugins'], 'global/plugins/bower_components/jquery-ui/jquery-ui.js');
 
         View::share('css', $this->css);
@@ -207,6 +204,15 @@ class SurveyController extends MainController
                 if(isset($survey_objs)){
                     $survey->surveyObjective()->saveMany($survey_objs);
                 }
+
+                if(isset($request->id)){
+                    $questions = Question::where('survey_id',$request->id)->get();
+                    foreach ($questions as $question){
+                        $newQuestion = $question->replicate();
+                        $newQuestion->survey_id = $survey->id;
+                        $newQuestion->save();
+                    }
+                }
             }
         });
 
@@ -215,9 +221,8 @@ class SurveyController extends MainController
         return redirect()->intended('/survey');
     }
 
-    public function show()
+    public function show($id)
     {
-        $id = Input::get('id');
         $survey = Survey::find($id);
         if (empty($survey))
         {
@@ -297,9 +302,8 @@ class SurveyController extends MainController
         ));
     }
 
-    public function edit()
+    public function edit($id)
     {
-        $id = Input::get('id');
         $survey = Survey::find($id);
         if (empty($survey))
         {
@@ -381,7 +385,6 @@ class SurveyController extends MainController
 
     public function update(StoreSurveyRequest $request)
     {
-        //dd($request);
         $survey = Survey::find($request->id);
         $survey->created_by = $this->user_info['username'];
         $survey->unit = $request->unit;
@@ -440,6 +443,69 @@ class SurveyController extends MainController
             session()->flash('alert-danger', 'Terjadi kesalahan pada sistem, Survey gagal dihapus');
 
         return redirect()->intended('/');
+    }
+
+    public function copy($id)
+    {
+        array_push($this->css['pages'], 'global/plugins/bower_components/bootstrap-datepicker-vitalets/css/datepicker.css');
+        array_push($this->css['pages'], 'global/plugins/bower_components/bootstrap-daterangepicker/css/daterangepicker.css');
+
+        array_push($this->js['scripts'], 'global/plugins/bower_components/bootstrap-datepicker-vitalets/js/bootstrap-datepicker.js');
+        array_push($this->js['scripts'], 'global/plugins/bower_components/bootstrap-daterangepicker/js/daterangepicker.js');
+        array_push($this->js['scripts'], 'global/plugins/bower_components/jquery-validation/dist/jquery.validate.min.js');
+        array_push($this->js['plugins'], 'global/plugins/bower_components/jquery-ui/jquery-ui.js');
+
+        View::share('css', $this->css);
+        View::share('js', $this->js);
+
+        $upd_mode = 'copy';
+        $action_url = 'survey/create';
+        $page_title = 'Salin Survey';
+        $disabled = '';
+
+        $survey = new Survey();
+        $survey->id = $id;
+        $survey->sample = new Collection();
+
+        $user_auth = UserAuth::where('username',$this->user_info['username'])->get();
+        $auth = null;
+
+        if($user_auth->contains('auth_type','SU')){
+            $auth = 'SU';
+        }elseif($user_auth->contains('auth_type','OPU')){
+            $auth = 'OPU';
+        }else{
+            $auth = 'OPF';
+        }
+
+        $simsdm = new Simsdm();
+        $units = [];
+
+        if($user_auth->contains('auth_type','SU')){
+            $units = $simsdm->unitAll();
+        }else{
+            foreach ($user_auth as $user){
+                $list_units = $simsdm->unitAll();
+
+                foreach ($list_units as $key=>$unit){
+                    if (is_array($list_units) && !in_array($user->unit, $unit)){
+                        unset($list_units[$key]);
+                    }
+                }
+                $units = array_merge($units, $list_units);
+            }
+        }
+
+        return view('survey.survey-detail', compact(
+            'upd_mode',
+            'action_url',
+            'page_title',
+            'disabled',
+            'auth',
+            'survey',
+            'units',
+            'unit_user'
+        ));
     }
 
     public function report()
@@ -517,13 +583,14 @@ class SurveyController extends MainController
         $i = 0;
 
         $type = $this->user_info['type'];
+        $work_unit = $this->user_info['work_unit'];;
 
         if($type=='0' || $type=='1' || $type=='2' || $type=='3' || $type=='4'){
-            $surveys = Survey::whereHas('SurveyObjective', function($q) { $q->where('objective','PSI2');})->where('lecture', '1')->get();
+            $surveys = Survey::whereHas('SurveyObjective', function($q) use($work_unit) { $q->where('objective',$work_unit);})->where('lecture', '1')->get();
         }else if($type=='5'){
-            $surveys = Survey::whereHas('SurveyObjective', function($q) { $q->where('objective','PSI2');})->where('employee', '1')->get();
+            $surveys = Survey::whereHas('SurveyObjective', function($q) use($work_unit) { $q->where('objective',$work_unit);})->where('employee', '1')->get();
         }else{
-            $surveys = Survey::whereHas('SurveyObjective', function($q) { $q->where('objective','PSI2');})->where('student', '1')->get();
+            $surveys = Survey::whereHas('SurveyObjective', function($q) use($work_unit) { $q->where('objective',$work_unit);})->where('student', '1')->get();
         }
 
         foreach ($surveys as $survey){

@@ -1,7 +1,7 @@
 @extends('main_layout')
 
 @section('content')
-    <!-- Modal for delete unit -->
+    <!-- Modal for delete survey -->
     <div id="delete" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">

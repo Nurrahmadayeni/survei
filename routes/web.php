@@ -15,15 +15,24 @@ Route::get('/', 'SurveyController@index');
 Route::get('survey', 'SurveyController@index');
 Route::get('survey/ajax', 'SurveyController@getAjax');
 Route::get('survey/ajaxSurvey', 'SurveyController@ajaxSurvey');
-Route::get('survey/ajaxSurveyUser', 'SurveyController@getAjaxSurveyUser');
 Route::get('survey/create', 'SurveyController@create');
 Route::post('survey/create', 'SurveyController@store');
 Route::delete('survey/delete', 'SurveyController@destroy');
-Route::get('survey/show', 'SurveyController@show');
-Route::get('survey/edit', 'SurveyController@edit');
+Route::get('survey/show/{id}', 'SurveyController@show');
+Route::get('survey/edit/{id}', 'SurveyController@edit');
 Route::put('survey/edit', 'SurveyController@update');
+Route::get('survey/copy/{id}', 'SurveyController@copy');
 Route::get('survey/report', 'SurveyController@report');
 Route::post('survey/report', 'SurveyController@showreport');
+
+Route::get('question/create/{id}', 'QuestionController@create');
+Route::post('question/create', 'QuestionController@store');
+Route::post('question/getQstTotal', 'QuestionController@getQstTotal');
+Route::get('question/show/{id}', 'QuestionController@show');
+Route::get('question/ajax', 'QuestionController@getAjax');
+Route::post('question/edit', 'QuestionController@edit');
+
+Route::delete('question/delete', 'QuestionController@destroy');
 
 Route::get('users/', 'UserController@index');
 Route::get('users/create', 'UserController@create');
