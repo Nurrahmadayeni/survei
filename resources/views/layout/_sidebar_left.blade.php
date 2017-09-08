@@ -22,7 +22,7 @@
         <li class="submenu {!! Request::is('/','survey', 'survey/*') ? 'active' : null !!}">
             <a href="{{url('/survey')}}">
                 <span class="icon"><i class="fa fa-list-alt"></i></span>
-                <span class="text">Survey</span>
+                <span class="text">Survei</span>
                 {!! Request::is('/','survey', 'survey/*') ? '<span class="selected"></span>' : null !!}
             </a>
         </li>
@@ -30,7 +30,7 @@
             <li class="submenu {!! Request::is('survey/report', 'survey/report') ? 'active' : null !!}">
                 <a href="{{url('survey/report')}}">
                     <span class="icon"><i class="fa fa-line-chart"></i></span>
-                    <span class="text">Laporan Survey</span>
+                    <span class="text">Laporan Survei</span>
                     {!! Request::is('survey/report', 'survey/report') ? '<span class="selected"></span>' : null !!}
                 </a>
             </li>

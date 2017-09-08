@@ -20,7 +20,7 @@ class MainController extends Controller
     // sidebar left class
     public $sidebarClass = "sidebar-circle";
 
-    public $page_title = 'SURVEY USU - Sistem Informasi Manajemen Survey Universitas Sumatera Utara';
+    public $page_title = 'SURVEI USU - Sistem Informasi Manajemen Survei Universitas Sumatera Utara';
 
     public $v_auths = [];
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Question;
 use App\Survey;
 use App\SurveyObjective;
+use App\UserAnswer;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
@@ -23,7 +24,7 @@ class SurveyController extends MainController
     public function __construct()
     {
         $this->middleware('is_auth')->except('index');
-        $this->middleware('is_operator')->except('index', 'ajaxSurvey');
+        $this->middleware('is_operator')->except('index', 'ajaxSurvey','answer','answerStore');
 
         parent::__construct();
 
@@ -56,10 +57,10 @@ class SurveyController extends MainController
             $login = new \stdClass();
             $login->logged_in = true;
             $login->payload = new \stdClass();
-            $login->payload->identity = env('USERNAME_LOGIN');
-            $login->payload->user_id = env('ID_LOGIN');
-//            $login->payload->identity = env('LOGIN_USERNAME');
-//            $login->payload->user_id = env('LOGIN_ID');
+//            $login->payload->identity = env('USERNAME_LOGIN');
+//            $login->payload->user_id = env('ID_LOGIN');
+            $login->payload->identity = env('LOGIN_USERNAME');
+            $login->payload->user_id = env('LOGIN_ID');
 
         } else
         {
@@ -98,10 +99,15 @@ class SurveyController extends MainController
             $this->setUserInfo();
             $page_title = 'Daftar Survey';
 
-            $auths="";
-            $user_auth = UserAuth::where('username',$user->username)->first();
-            if($user_auth){
-                $auths = $user_auth->auth_type;
+            $user_auth = UserAuth::where('username',$this->user_info['username'])->get();
+            $auths = null;
+
+            if($user_auth->contains('auth_type','SU')){
+                $auths = 'SU';
+            }elseif($user_auth->contains('auth_type','OPU')){
+                $auths = 'OPU';
+            }else{
+                $auths = 'OPF';
             }
 
             return view('survey.survey-list', compact('page_title', 'auths'));
@@ -443,6 +449,83 @@ class SurveyController extends MainController
             session()->flash('alert-danger', 'Terjadi kesalahan pada sistem, Survey gagal dihapus');
 
         return redirect()->intended('/');
+    }
+
+    public function answer($id)
+    {
+        array_push($this->css['pages'], 'global/plugins/bower_components/bootstrap-datepicker-vitalets/css/datepicker.css');
+        array_push($this->css['pages'], 'global/plugins/bower_components/bootstrap-daterangepicker/css/daterangepicker.css');
+
+        array_push($this->js['scripts'], 'global/plugins/bower_components/bootstrap-datepicker-vitalets/js/bootstrap-datepicker.js');
+        array_push($this->js['scripts'], 'global/plugins/bower_components/bootstrap-daterangepicker/js/daterangepicker.js');
+        array_push($this->js['scripts'], 'global/plugins/bower_components/jquery-validation/dist/jquery.validate.min.js');
+        array_push($this->js['plugins'], 'global/plugins/bower_components/jquery-ui/jquery-ui.js');
+
+        View::share('css', $this->css);
+        View::share('js', $this->js);
+
+        $upd_mode = 'copy';
+        $action_url = 'survey/answer';
+        $page_title = 'Jawab Survey';
+        $disabled = '';
+
+        $questions = Question::where('survey_id',$id)->get();
+
+
+        return view('survey.survey-answer', compact(
+            'upd_mode',
+            'action_url',
+            'page_title',
+            'disabled',
+            'questions'
+        ));
+    }
+
+    public function answerStore()
+    {
+        $data = Input::get('chosen');
+        foreach (Input::get('qst_id') as $key => $value) {
+            $user_answer = new UserAnswer();
+
+            $type = Input::get('answer_type')[$key];
+
+            $user_answer->username = $this->user_info['username'];
+            $user_answer->survey_id = Input::get('survey_id');
+            $user_answer->question_id = $value;
+            $user_answer->answer_type = $type;
+            $user_answer->subject_id = "";
+
+            if($this->user_info['type'] == 1 || $this->user_info['type'] == 5){
+                $user_answer->level= 'employee';
+            }else{
+                $user_answer->level= 'lecture';
+            }
+
+            if(isset($data) && $type=='2'){
+                $val_chosen = "";
+                $i = 0;
+                $l = count($data[$value]);
+                foreach($data[$value] as $a => $v) {
+                    if($i == $l-1) {
+                        $val_chosen.= $v;
+                    }else{
+                        $val_chosen.= $v.", ";
+                    }
+                    $i++;
+                }
+                $user_answer->answer = $val_chosen;
+            }else{
+                $answer = Input::get('answer')[$value];
+
+                $user_answer->answer = $answer;
+            }
+
+            DB::transaction(function () use ($user_answer){
+                $user_answer->save();
+            });
+        }
+
+        echo "success";
     }
 
     public function copy($id)

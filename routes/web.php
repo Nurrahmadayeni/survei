@@ -22,6 +22,8 @@ Route::get('survey/show/{id}', 'SurveyController@show');
 Route::get('survey/edit/{id}', 'SurveyController@edit');
 Route::put('survey/edit', 'SurveyController@update');
 Route::get('survey/copy/{id}', 'SurveyController@copy');
+Route::get('survey/answer/{id}', 'SurveyController@answer');
+Route::post('survey/answer', 'SurveyController@answerStore');
 Route::get('survey/report', 'SurveyController@report');
 Route::post('survey/report', 'SurveyController@showreport');
 

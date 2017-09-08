@@ -150,7 +150,6 @@ $(document).ready(function () {
     }
 
     if ($("#survey-list-user").length) {
-
         var surveyUserDatatable = $("#survey-list-user").dataTable({
             autoWidth: false,
             responsive: true,
@@ -158,7 +157,7 @@ $(document).ready(function () {
             columnDefs: [
                 {
                     orderable: false,
-                    defaultContent: '<a class="btn btn-theme btn-sm rounded answer" data-toggle="tooltip" data-placement="top" title="Jawab Survey"><i class="fa fa-eye" style="color:white;"></i></a>',
+                    defaultContent: '<a data-toggle="tooltip" data-placement="top" title="Jawab Survey"><button class="btn btn-theme btn-sm rounded answer"><i class="fa fa-eye" style="color:white;"></i></button></a>',
                     targets: 5
                 },
                 {
@@ -470,6 +469,29 @@ $(document).ready(function () {
                 }
             });
         }
+    });
+
+    $('#form_question').on('submit', function (e) {
+        e.preventDefault();
+        $("#survey-submit").val('Process . . .');
+        $.ajax({
+            url: baseUrl + 'survey/answer',
+            type:'POST',
+            data:$('#form_question').serialize(),
+            success:function(result){
+                $('html, body').animate({ scrollTop: 0 }, 300);
+                $("#survey-submit").val('Submit');
+
+                console.log(result);
+                if(result=="success"){
+                    $('html, body').animate({ scrollTop: 0 }, 300);
+                    notify('Survey berhasil dijawab','success');
+                    setTimeout(function(){ window.open(baseUrl + "/survey", "_self"); }, 800);
+                }else{
+                    notify('Survey gaggal dijawab, silahkan periksa kembali jawaban anda','danger');
+                }
+            }
+        });
     });
 
     $("#data").DataTable();

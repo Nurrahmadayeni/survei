@@ -24,7 +24,7 @@
             <!-- Start brand -->
             <a id="tour-1" class="navbar-brand" href="{{url('/')}}">
                 {{--<img class="logo" src="{{url('img/logo_usu_.png')}}" alt="brand logo">--}}
-                <strong>PortalSurvey USU</strong>
+                <strong>PortalSurvei USU</strong>
             </a><!-- /.navbar-brand -->
             <!--/ End brand -->
 
