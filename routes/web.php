@@ -45,3 +45,5 @@ Route::delete('users/delete', 'UserController@destroy');
 Route::get('users/edit', 'UserController@edit');
 Route::put('users/edit', 'UserController@update');
 Route::get('users/ajax/search', 'UserController@searchUser');
+
+Route::get('callback.php', 'CallbackController@callback');
