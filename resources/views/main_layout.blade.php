@@ -10,7 +10,7 @@
         <meta name="keywords" content="survey, sistem informasi manajamen survey, usu, universitas sumatera utara">
         <meta name="author" content="PSI USU">
         <meta name="csrf-token" content="{{ Session::token() }}">
-        <title>SURVEY USU - {{$page_title}}</title>
+        <title>SURVEI USU - {{$page_title}}</title>
         <!--/ END META SECTION -->
 
     <!-- START @FAVICONS -->

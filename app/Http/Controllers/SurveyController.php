@@ -97,7 +97,7 @@ class SurveyController extends MainController
             Auth::login($user);
 
             $this->setUserInfo();
-            $page_title = 'Daftar Survey';
+            $page_title = 'Daftar Survei';
 
             $user_auth = UserAuth::where('username',$this->user_info['username'])->get();
             $auths = null;
@@ -129,7 +129,7 @@ class SurveyController extends MainController
 
         $upd_mode = 'create';
         $action_url = 'survey/create';
-        $page_title = 'Tambah Survey';
+        $page_title = 'Tambah Survei';
         $disabled = '';
 
         $survey = new Survey();
@@ -222,7 +222,7 @@ class SurveyController extends MainController
             }
         });
 
-        $request->session()->flash('alert-success', 'Survey berhasil ditambah');
+        $request->session()->flash('alert-success', 'Survei berhasil ditambah');
 
         return redirect()->intended('/survey');
     }
@@ -248,7 +248,7 @@ class SurveyController extends MainController
 
         $upd_mode = 'show';
         $action_url = 'survey/edit';
-        $page_title = 'Lihat Survey';
+        $page_title = 'Lihat Survei';
         $disabled = 'disabled';
 
         $survey->sample = new Collection();
@@ -427,7 +427,7 @@ class SurveyController extends MainController
             }
         });
 
-        $request->session()->flash('alert-success', 'Survey berhasil diubah');
+        $request->session()->flash('alert-success', 'Survei berhasil diubah');
 
         return redirect()->intended('/survey');
     }
@@ -444,9 +444,9 @@ class SurveyController extends MainController
 
         $saved = $survey->delete();
         if($saved)
-            session()->flash('alert-success', 'Survey berhasil dihapus');
+            session()->flash('alert-success', 'Survei berhasil dihapus');
         else
-            session()->flash('alert-danger', 'Terjadi kesalahan pada sistem, Survey gagal dihapus');
+            session()->flash('alert-danger', 'Terjadi kesalahan pada sistem, Survei gagal dihapus');
 
         return redirect()->intended('/');
     }
@@ -466,7 +466,7 @@ class SurveyController extends MainController
 
         $upd_mode = 'copy';
         $action_url = 'survey/answer';
-        $page_title = 'Jawab Survey';
+        $page_title = 'Jawab Survei';
         $disabled = '';
 
         $questions = Question::where('survey_id',$id)->get();
@@ -543,7 +543,7 @@ class SurveyController extends MainController
 
         $upd_mode = 'copy';
         $action_url = 'survey/create';
-        $page_title = 'Salin Survey';
+        $page_title = 'Salin Survei';
         $disabled = '';
 
         $survey = new Survey();
