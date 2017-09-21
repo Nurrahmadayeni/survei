@@ -17,9 +17,9 @@
             <tr>
                 <th>ID</th>
                 <th>No.</th>
-                <th>Judul Survey</th>
+                <th>Judul Survei</th>
                 @if($auths=='SU')
-                    <th>Unit Survey</th>
+                    <th>Unit Survei</th>
                 @endif
                 <th>Dibuat Oleh</th>
                 <th>Sampel</th>

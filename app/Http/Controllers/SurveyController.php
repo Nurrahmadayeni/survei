@@ -26,6 +26,7 @@ class SurveyController extends MainController
         $this->middleware('is_auth')->except('index');
         $this->middleware('is_operator')->except('index', 'ajaxSurvey','answer','answerStore');
 
+
         parent::__construct();
 
         $this->simsdm = new Simsdm();
@@ -57,10 +58,10 @@ class SurveyController extends MainController
             $login = new \stdClass();
             $login->logged_in = true;
             $login->payload = new \stdClass();
-//            $login->payload->identity = env('USERNAME_LOGIN');
-//            $login->payload->user_id = env('ID_LOGIN');
-            $login->payload->identity = env('LOGIN_USERNAME');
-            $login->payload->user_id = env('LOGIN_ID');
+            $login->payload->identity = env('USERNAME_LOGIN');
+            $login->payload->user_id = env('ID_LOGIN');
+//            $login->payload->identity = env('LOGIN_USERNAME');
+//            $login->payload->user_id = env('LOGIN_ID');
 
         } else
         {
@@ -100,13 +101,14 @@ class SurveyController extends MainController
             $page_title = 'Daftar Survei';
 
             $user_auth = UserAuth::where('username',$this->user_info['username'])->get();
+
             $auths = null;
 
             if($user_auth->contains('auth_type','SU')){
                 $auths = 'SU';
             }elseif($user_auth->contains('auth_type','OPU')){
                 $auths = 'OPU';
-            }else{
+            }elseif($user_auth->contains('auth_type','OPF')){
                 $auths = 'OPF';
             }
 
@@ -123,6 +125,7 @@ class SurveyController extends MainController
         array_push($this->js['scripts'], 'global/plugins/bower_components/bootstrap-daterangepicker/js/daterangepicker.js');
         array_push($this->js['scripts'], 'global/plugins/bower_components/jquery-validation/dist/jquery.validate.min.js');
         array_push($this->js['plugins'], 'global/plugins/bower_components/jquery-ui/jquery-ui.js');
+        array_push($this->js['plugins'], 'js/loadingoverlay.min.js');
 
         View::share('css', $this->css);
         View::share('js', $this->js);
@@ -151,6 +154,8 @@ class SurveyController extends MainController
 
         if($user_auth->contains('auth_type','SU')){
             $units = $simsdm->unitAll();
+            $usu = array("id"=>"","code"=>"USU","name"=>"Universitas Sumatera Utara");
+            array_push($units,$usu);
         }else{
             foreach ($user_auth as $user){
                 $list_units = $simsdm->unitAll();
@@ -176,31 +181,31 @@ class SurveyController extends MainController
         ));
     }
 
-    public function store(StoreSurveyRequest $request)
+    public function store()
     {
         $survey = new Survey();
         $survey->created_by = $this->user_info['username'];
-        $survey->unit = $request->unit;
-        $survey->title = $request->title;
-        $survey->is_subject = $request->is_subject;
+        $survey->unit = Input::get('unit');
+        $survey->title = Input::get('title');
+        $survey->is_subject = Input::get('is_subject');
 
-        $survey->start_date = date('Y-m-d', strtotime($request->start_date));
-        $survey->end_date = date('Y-m-d', strtotime($request->end_date));
-        
-        if($request->is_subject=='0'){
-            foreach ($request->sample as $key => $value) {
+        $survey->start_date = date('Y-m-d', strtotime(Input::get('start_date')));
+        $survey->end_date = date('Y-m-d', strtotime(Input::get('end_date')));
+
+        if(Input::get('is_subject')=='0'){
+            foreach (Input::get('sample') as $key => $value) {
                 $survey->$value = '1';
             }
         }else{
             $survey->student = '1';
         }
 
-        DB::transaction(function () use ($survey, $request){
+        DB::transaction(function () use ($survey){
             $saved_survey = $survey->save();
             if($saved_survey){
                 $survey_objs = new Collection();
 
-                foreach ($request->unit_objectives as $key => $item){
+                foreach (Input::get('unit_objectives') as $key => $item){
                     $survey_obj = new SurveyObjective();
                     $survey_obj->objective = $item;
 
@@ -211,8 +216,9 @@ class SurveyController extends MainController
                     $survey->surveyObjective()->saveMany($survey_objs);
                 }
 
-                if(isset($request->id)){
-                    $questions = Question::where('survey_id',$request->id)->get();
+                $id_ = Input::get('id');
+                if(isset($id_)){
+                    $questions = Question::where('survey_id',$id_)->get();
                     foreach ($questions as $question){
                         $newQuestion = $question->replicate();
                         $newQuestion->survey_id = $survey->id;
@@ -222,9 +228,7 @@ class SurveyController extends MainController
             }
         });
 
-        $request->session()->flash('alert-success', 'Survei berhasil ditambah');
-
-        return redirect()->intended('/survey');
+        echo "success";
     }
 
     public function show($id)
@@ -437,6 +441,8 @@ class SurveyController extends MainController
         $id = Input::get('id');
         $survey = Survey::find($id);
         $survey->surveyObjective()->delete();
+        $survey->question()->delete();
+        $survey->userAnswer()->delete();
         if(empty($survey))
         {
             return abort('404');
@@ -460,6 +466,8 @@ class SurveyController extends MainController
         array_push($this->js['scripts'], 'global/plugins/bower_components/bootstrap-daterangepicker/js/daterangepicker.js');
         array_push($this->js['scripts'], 'global/plugins/bower_components/jquery-validation/dist/jquery.validate.min.js');
         array_push($this->js['plugins'], 'global/plugins/bower_components/jquery-ui/jquery-ui.js');
+        array_push($this->js['plugins'], 'js/loadingoverlay_progress.min.js');
+        array_push($this->js['plugins'], 'js/loadingoverlay.min.js');
 
         View::share('css', $this->css);
         View::share('js', $this->js);
@@ -470,14 +478,19 @@ class SurveyController extends MainController
         $disabled = '';
 
         $questions = Question::where('survey_id',$id)->get();
+        $answers = UserAnswer::with('question')->where('survey_id',$id)->where('username',$this->user_info['username'])->get();
 
+        if(!$answers->isEmpty()){
+            $disabled = 'disabled';
+        }
 
         return view('survey.survey-answer', compact(
             'upd_mode',
             'action_url',
             'page_title',
             'disabled',
-            'questions'
+            'questions',
+            'answers'
         ));
     }
 
@@ -537,6 +550,8 @@ class SurveyController extends MainController
         array_push($this->js['scripts'], 'global/plugins/bower_components/bootstrap-daterangepicker/js/daterangepicker.js');
         array_push($this->js['scripts'], 'global/plugins/bower_components/jquery-validation/dist/jquery.validate.min.js');
         array_push($this->js['plugins'], 'global/plugins/bower_components/jquery-ui/jquery-ui.js');
+        array_push($this->js['plugins'], 'js/loadingoverlay.min.js');
+
 
         View::share('css', $this->css);
         View::share('js', $this->js);
@@ -566,6 +581,8 @@ class SurveyController extends MainController
 
         if($user_auth->contains('auth_type','SU')){
             $units = $simsdm->unitAll();
+            $usu = array("id"=>"","code"=>"USU","name"=>"Universitas Sumatera Utara");
+            array_push($units,$usu);
         }else{
             foreach ($user_auth as $user){
                 $list_units = $simsdm->unitAll();
@@ -613,6 +630,7 @@ class SurveyController extends MainController
         }
 
         $data = [];
+        $simsdm = new Simsdm();
 
         $i = 0;
         foreach ($surveys as $survey)
@@ -631,17 +649,33 @@ class SurveyController extends MainController
             $data['data'][$i][0] = $survey->id;
             $data['data'][$i][1] = $i + 1;
             $data['data'][$i][2] = $survey->title;
+
+            $count_sample = UserAnswer::where('survey_id',$survey->id)->groupBy('username')->count();
             if($user_auth->auth_type == 'SU'){
+
+                $list_units = $simsdm->unitAll();
+                $usu = array("id"=>"","code"=>"USU","name"=>"Universitas Sumatera Utara");
+                array_push($list_units,$usu);
+
+                foreach ($list_units as $key=>$unit){
+                    if (is_array($list_units) && !in_array($survey->unit, $unit)){
+                        unset($list_units[$key]);
+                    }
+                }
+                foreach ($list_units as $unit){
+                    $survey->unit = $unit['name'];
+                }
+
                 $data['data'][$i][3] = $survey->unit;
                 $data['data'][$i][4] = $survey->created_by;
                 $data['data'][$i][5] = $sample;
-                $data['data'][$i][6] = 'jumlah_sample';
-                $data['data'][$i][7] = $survey->start_date. ' s/d '.$survey->end_date;
+                $data['data'][$i][6] = $count_sample;
+                $data['data'][$i][7] = date('d M Y', strtotime($survey->start_date)). ' - '.date('d M Y', strtotime($survey->end_date));
             }else{
                 $data['data'][$i][3] = $survey->created_by;
                 $data['data'][$i][4] = $sample;
-                $data['data'][$i][5] = 'jumlah_sample';
-                $data['data'][$i][6] = $survey->start_date. ' - '.$survey->end_date;
+                $data['data'][$i][5] = $count_sample;
+                $data['data'][$i][6] = date('d M Y', strtotime($survey->start_date)). ' - '.date('d M Y', strtotime($survey->end_date));
             }
             $i++;
         }
@@ -663,6 +697,7 @@ class SurveyController extends MainController
     public function ajaxSurvey()
     {
         $data = [];
+        $simsdm = new Simsdm();
         $i = 0;
 
         $type = $this->user_info['type'];
@@ -680,8 +715,23 @@ class SurveyController extends MainController
             $data['data'][$i][0] = $survey->id;
             $data['data'][$i][1] = $i + 1;
             $data['data'][$i][2] = $survey->title;
+
+            $list_units = $simsdm->unitAll();
+            $usu = array("id"=>"","code"=>"USU","name"=>"Universitas Sumatera Utara");
+            array_push($list_units,$usu);
+
+            foreach ($list_units as $key=>$unit){
+                if (is_array($list_units) && !in_array($survey->unit, $unit)){
+                    unset($list_units[$key]);
+                }
+            }
+
+            foreach ($list_units as $unit){
+                $survey->unit = $unit['name'];
+            }
+
             $data['data'][$i][3] = $survey->unit;
-            $data['data'][$i][4] = $survey->start_date. ' s/d '.$survey->end_date;
+            $data['data'][$i][4] = date('d M Y', strtotime($survey->start_date)). ' - '.date('d M Y', strtotime($survey->end_date));
             $i++;
         }
 

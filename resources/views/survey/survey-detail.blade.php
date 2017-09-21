@@ -78,8 +78,8 @@
                                     <a href="{{url('/')}}" class="btn btn-danger rounded">Batal</a>
                                 </div>
                             @endif
-
-                            <form action="{{url($action_url)}}" method="post" enctype="multipart/form-data">
+                                {{--action="{{url($action_url)}}"--}}
+                            <form id="form_addSurvey" method="post" enctype="multipart/form-data">
                                 @if($upd_mode != 'create')
                                     <input name="id" type="hidden" value="{{$survey['id']}}">
                                 @endif
@@ -114,6 +114,8 @@
                                             @endforeach
                                         </select>
                                     </div>
+                                    <button type='button' class='btn btn-success btn-xs btn-slideright selectall'>Select All Unit Kerja</button>
+                                    <button type='button' class='btn btn-danger btn-xs btn-slideright deselectall'>Delect All Unit Kerja</button>
                                 @endif
 
                                 <div id="is_subjective" class="form-group">

@@ -7,7 +7,7 @@ function notify(message, type){
     },{
         type: type,
         placement: {
-            from: "bottom"
+            from: "top"
         },
         animate: {
             enter: "animated fadeInRight",
@@ -157,7 +157,7 @@ $(document).ready(function () {
             columnDefs: [
                 {
                     orderable: false,
-                    defaultContent: '<a data-toggle="tooltip" data-placement="top" title="Jawab Survey"><button class="btn btn-theme btn-sm rounded answer"><i class="fa fa-eye" style="color:white;"></i></button></a>',
+                    defaultContent: '<a data-toggle="tooltip" data-placement="top" title="Lihat Survey"><button class="btn btn-theme btn-sm rounded answer"><i class="fa fa-eye" style="color:white;"></i></button></a>',
                     targets: 5
                 },
                 {
@@ -411,12 +411,14 @@ $(document).ready(function () {
             myForm.find(':submit').click();
         }else{
             e.preventDefault();
+            $("#tambah_qst").LoadingOverlay("show");
             $("#save_add").val('Process . . .');
             $.ajax({
                 url:baseUrl + 'question/create',
                 type:'POST',
                 data:$('#form_addQst').serialize(),
                 success:function(result){
+                    $("#tambah_qst").LoadingOverlay("hide", true);
                     $("#save_add").val('Simpan dan Tambah');
                     $('html, body').animate({ scrollTop: 0 }, 300);
                     if(result=='success'){
@@ -451,12 +453,14 @@ $(document).ready(function () {
             myForm.find(':submit').click();
         }else{
             e.preventDefault();
+            $("#tambah_qst").LoadingOverlay("show");
             $("#save_add").val('Process . . .');
             $.ajax({
                 url:baseUrl + 'question/create',
                 type:'POST',
                 data:$('#form_addQst').serialize(),
                 success:function(result){
+                    $("#tambah_qst").LoadingOverlay("hide", true);
                     $("#save_add").val('Simpan dan Lihat Daftar');
                     $('html, body').animate({ scrollTop: 0 }, 300);
                     if(result=='success'){
@@ -474,6 +478,7 @@ $(document).ready(function () {
     $('#form_question').on('submit', function (e) {
         e.preventDefault();
         $("#survey-submit").val('Process . . .');
+        $("#survey-container").LoadingOverlay("show");
         $.ajax({
             url: baseUrl + 'survey/answer',
             type:'POST',
@@ -481,7 +486,7 @@ $(document).ready(function () {
             success:function(result){
                 $('html, body').animate({ scrollTop: 0 }, 300);
                 $("#survey-submit").val('Submit');
-
+                $("#survey-container").LoadingOverlay("hide", true);
                 console.log(result);
                 if(result=="success"){
                     $('html, body').animate({ scrollTop: 0 }, 300);
@@ -489,6 +494,30 @@ $(document).ready(function () {
                     setTimeout(function(){ window.open(baseUrl + "/survey", "_self"); }, 800);
                 }else{
                     notify('Survey gaggal dijawab, silahkan periksa kembali jawaban anda','danger');
+                }
+            }
+        });
+    });
+
+    $('#form_addSurvey').on('submit', function (e) {
+        e.preventDefault();
+        $("#survey-submit").val('Process . . .');
+        $("#survey-container").LoadingOverlay("show");
+        $.ajax({
+            url: baseUrl + 'survey/create',
+            type:'POST',
+            data:$('#form_addSurvey').serialize(),
+            success:function(result){
+                $('html, body').animate({ scrollTop: 0 }, 300);
+                $("#survey-submit").val('Submit');
+                $("#survey-container").LoadingOverlay("hide", true);
+                console.log(result);
+                if(result=="success"){
+                    $('html, body').animate({ scrollTop: 0 }, 300);
+                    notify('Survey berhasil ditambah','success');
+                    setTimeout(function(){ window.open(baseUrl + "/survey", "_self"); }, 800);
+                }else{
+                    notify('Survey gaggal ditambah, silahkan periksa kembali inputan anda','danger');
                 }
             }
         });
@@ -586,4 +615,14 @@ $(document).ready(function () {
             format: 'dd-mm-yyyy'
         });
     }
+
+    $(".selectall").click(function(){
+        $('#pilihan_tujuan option').prop('selected', true);
+        $('#pilihan_tujuan').trigger('change');
+    });
+
+    $(".deselectall").click(function(){
+        $("#pilihan_tujuan option").removeAttr("selected");
+        $('#pilihan_tujuan').val('').trigger("change");
+    });
 });

@@ -29,11 +29,11 @@
 
         <!-- Start page header -->
         <div id="tour-11" class="header-content">
-            <h2><i class="fa fa-list-alt"></i>Survey</h2>
+            <h2><i class="fa fa-list-alt"></i>Survei</h2>
             <div class="breadcrumb-wrapper hidden-xs">
                 <span class="label">Direktori Anda:</span>
                 <ol class="breadcrumb">
-                    <li class="active">Survey</li>
+                    <li class="active">Survei</li>
                 </ol>
             </div>
         </div><!-- /.header-content -->
@@ -44,7 +44,7 @@
             <div class="panel rounded shadow">
                 <div class="panel-heading">
                     <div class="pull-left">
-                        <h3 class="panel-title">Daftar Survey</h3>
+                        <h3 class="panel-title">Daftar Survei</h3>
                     </div>
                     <div class="pull-right">
                         <button class="btn btn-sm" data-action="collapse" data-container="body" data-toggle="tooltip" data-placement="top" data-title="Collapse"><i class="fa fa-angle-up"></i></button>

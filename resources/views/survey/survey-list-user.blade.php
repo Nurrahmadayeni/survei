@@ -5,8 +5,8 @@
             <tr>
                 <th>ID</th>
                 <th>No.</th>
-                <th>Judul Survey</th>
-                <th>Survey</th>
+                <th>Judul Survei</th>
+                <th>Survei</th>
                 <th>Jangka Waktu</th>
                 <th>Aksi</th>
             </tr>

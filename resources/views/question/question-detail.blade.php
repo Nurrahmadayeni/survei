@@ -126,9 +126,11 @@
                         </div>
                         <div id="survey-container" class="panel-body">
                             <div class="row">
-                                <h4><div class="col-md-2"><label for="title" class="control-label">Judul Survey :</label></div>
-                                <div class="col-md-4"><label for="title" class="control-label"><b>{{$survey['title']}}</b></label></div></h4>
-                            </div><br/>
+                                <h5><div class="col-md-2"><label for="title" class="control-label">Judul Survey :</label></div>
+                                <div class="col-md-8"><label for="title" class="control-label"><b>{{$survey['title']}}</b></label></div></h5>
+                                <div class="col-md-2"><a href="{{url('question/show/'.$survey['id'])}}" class="btn btn-theme rounded btn-slideright" data-toggle='tooltip' data-placement='top' title='Daftar Pertanyaan'>Daftar Pertanyaan</a></div>
+                            </div><hr>
+
                             <div class="row">
                                 <div class="col-md-4">
                                     <label> Tambah Pertanyaan Baru <small class='text-danger'><i><b>( Pertanyaan ke <span id='jlh_tanya'>{{$question_total}} </span> )</b></i></small></label>

@@ -115,6 +115,7 @@ class QuestionController extends MainController
         array_push($this->js['scripts'], 'global/plugins/bower_components/jquery-validation/dist/jquery.validate.min.js');
         array_push($this->js['scripts'], 'global/plugins/bower_components/jquery.inputmask/dist/jquery.inputmask.bundle.min.js');
         array_push($this->js['plugins'], 'global/plugins/bower_components/jquery-ui/jquery-ui.js');
+        array_push($this->js['plugins'], 'js/loadingoverlay.min.js');
 
         View::share('css', $this->css);
         View::share('js', $this->js);
@@ -150,7 +151,7 @@ class QuestionController extends MainController
         if(isset($choices)){
             for($i=0; $i<count($choices); $i++){
                 if($i==count($choices)-1){
-                    $value_chosen.=ucwords($choices[$i]).'';
+                    $value_chosen.=ucwords($choices[$i]);
                 }else{
                     $value_chosen.=ucwords($choices[$i]).', ';
                 }
