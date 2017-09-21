@@ -465,7 +465,7 @@ $(document).ready(function () {
                     $('html, body').animate({ scrollTop: 0 }, 300);
                     if(result=='success'){
                         notify('Pertanyaan berhasil ditambah','success');
-                        setTimeout(function(){ window.open(baseUrl + "question/show?id=" + survey_id, "_self"); }, 800);
+                        setTimeout(function(){ window.open(baseUrl + "question/show/" + survey_id, "_self"); }, 800);
                     }else{
                         notify('Pertanyaan gagal ditambah, silahkan periksa kembali','danger');
                     }
