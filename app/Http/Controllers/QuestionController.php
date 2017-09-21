@@ -146,7 +146,7 @@ class QuestionController extends MainController
         $question->answer_type = Input::get('answer_type');
 
         $choices = Input::get('choices');
-        $value_chosen = " ";
+        $value_chosen = "";
 
         if(isset($choices)){
             for($i=0; $i<count($choices); $i++){
