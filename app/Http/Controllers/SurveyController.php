@@ -650,7 +650,8 @@ class SurveyController extends MainController
             $data['data'][$i][1] = $i + 1;
             $data['data'][$i][2] = $survey->title;
 
-            $count_sample = UserAnswer::where('survey_id',$survey->id)->groupBy('username')->count();
+            $count = $users = DB::table('user_answers')->select('username')->where('survey_id',$survey->id)->groupBy('username')->get();
+            $count_sample = $count->count();
             if($user_auth->auth_type == 'SU'){
 
                 $list_units = $simsdm->unitAll();
