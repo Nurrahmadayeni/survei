@@ -15,6 +15,12 @@
     <!-- Bootstrap Core CSS -->
     <link href="{{url('assets/' . 'bootstrap/css/bootstrap.min.css')}}" rel="stylesheet">
 
+    <link href="{{url('assets/' . 'global/plugins/bower_components/datatables/dataTables.bootstrap.css')}}" rel="stylesheet">
+    <link href="{{url('assets/' . 'global/plugins/bower_components/datatables/datatables.responsive.css')}}" rel="stylesheet">
+
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+
     <!-- Theme CSS -->
     <link href="{{url('/' . 'css/freelancer.min.css')}}" rel="stylesheet">
 
@@ -23,9 +29,6 @@
     <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" type="text/css">
 
-    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-    <![endif]-->
 
 </head>
 
@@ -49,6 +52,9 @@
                     <a href="#page-top"></a>
                 </li>
                 <li class="page-scroll">
+                    <a href="#survei">SURVEI AKTIF</a>
+                </li>
+                <li class="page-scroll">
                     <a href="#about">Tentang SURVEI</a>
                 </li>
             </ul>
@@ -63,7 +69,6 @@
     <div class="container" id="maincontent" tabindex="-1">
         <div class="row">
             <div class="col-lg-12">
-                <img class="img-responsive" src="img/logo-1.png" alt="">
                 <div class="intro-text">
                     <h1 class="name">SURVEI</h1>
                     <hr class="star-light">
@@ -73,6 +78,38 @@
         </div>
     </div>
 </header>
+
+{{--survei aktif--}}
+<section id="survei">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <h2>SURVEI AKTIF</h2>
+                <hr class="star-primary">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="table-responsive mb-20">
+                    <table id="survey-active" class="table table-striped table-hover table-theme">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>No.</th>
+                            <th>Judul Survei</th>
+                            <th>Survei</th>
+                            <th>Tujuan Survei</th>
+                            <th>Jangka Waktu</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
 <!-- About Section -->
 <section id="about">
@@ -90,6 +127,8 @@
             <div class="col-lg-4">
                 <p>Untuk dapat menggunakan SURVEI, dosen/pegawai/mahasiswa harus melakukan login terlebih dahulu. Silahkan klik tombol login di bawah untuk melakukan login.</p>
             </div>
+        </div>
+        <div class="row">
             <div class="col-lg-8 col-lg-offset-2 text-center">
                 <a href="{{$login_link}}" class="btn btn-lg btn-primary btn-outline">
                     <i class="fa fa-sign-in"></i> Login
@@ -98,6 +137,7 @@
         </div>
     </div>
 </section>
+
 
 <!-- Footer -->
 <footer class="text-center">
@@ -117,6 +157,13 @@
 
 <!-- Bootstrap Core JavaScript -->
 <script src="{{url('assets/' . 'bootstrap/js/bootstrap.min.js')}}"></script>
+
+<script src="{{url('assets/' . 'global/plugins/bower_components/datatables/jquery.dataTables.min.js')}}"></script>
+<script src="{{url('assets/' . 'global/plugins/bower_components/datatables/dataTables.bootstrap.min.js')}}"></script>
+<script src="{{url('assets/' . 'global/plugins/bower_components/datatables/datatables.responsive.js')}}"></script>
+
+<script src="{{url('assets/' . 'js/customize.js')}}"></script>
+
 
 <!-- Plugin JavaScript -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js"></script>

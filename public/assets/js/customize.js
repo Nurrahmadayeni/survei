@@ -191,6 +191,28 @@ $(document).ready(function () {
         });
     }
 
+    if ($("#survey-active").length) {
+        $("#survey-active").dataTable({
+            autoWidth: false,
+            responsive: true,
+            ajax: baseUrl + 'survey/ajaxSurveyActive',
+            columnDefs: [
+                {
+                    className: "dt-center",
+                    targets: [1, 3, 5]
+                },
+                {
+                    width: "5%",
+                    targets: 1
+                },
+                {
+                    visible: false,
+                    targets: 0
+                }
+            ],
+        });
+    }
+
     if ($("#user-list").length) {
         var userDatatable = $("#user-list").dataTable({
             autoWidth: false,

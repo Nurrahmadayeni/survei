@@ -24,8 +24,7 @@ class SurveyController extends MainController
     public function __construct()
     {
         $this->middleware('is_auth')->except('index');
-        $this->middleware('is_operator')->except('index', 'ajaxSurvey','answer','answerStore');
-
+        $this->middleware('is_operator')->except('index', 'ajaxSurvey','ajaxSurveyActive','answer','answerStore');
 
         parent::__construct();
 
@@ -53,33 +52,47 @@ class SurveyController extends MainController
 
     public function index()
     {
-        if (env('APP_ENV') == 'local')
+//        if (env('APP_ENV') == 'local')
+//        {
+//            $login = new \stdClass();
+//            $login->logged_in = true;
+//            $login->payload = new \stdClass();
+//            $login->payload->identity = env('USERNAME_LOGIN');
+//            $login->payload->user_id = env('ID_LOGIN');
+////            $login->payload->identity = env('LOGIN_USERNAME');
+////            $login->payload->user_id = env('LOGIN_ID');
+//
+//        } else
+//        {
+//            $login = JWTAuth::communicate('https://akun.usu.ac.id/auth/listen', @$_COOKIE['ssotok'], function ($credential)
+//            {
+//                $loggedIn = $credential->logged_in;
+//                if ($loggedIn)
+//                {
+//                    return $credential;
+//                } else
+//                {
+//                    setcookie('ssotok', null, -1, '/');
+//
+//                    return false;
+//                }
+//            }
+//            );
+//        }
+        $login = JWTAuth::communicate('https://akun.usu.ac.id/auth/listen', @$_COOKIE['ssotok'], function ($credential)
         {
-            $login = new \stdClass();
-            $login->logged_in = true;
-            $login->payload = new \stdClass();
-            $login->payload->identity = env('USERNAME_LOGIN');
-            $login->payload->user_id = env('ID_LOGIN');
-//            $login->payload->identity = env('LOGIN_USERNAME');
-//            $login->payload->user_id = env('LOGIN_ID');
-
-        } else
-        {
-            $login = JWTAuth::communicate('https://akun.usu.ac.id/auth/listen', @$_COOKIE['ssotok'], function ($credential)
+            $loggedIn = $credential->logged_in;
+            if ($loggedIn)
             {
-                $loggedIn = $credential->logged_in;
-                if ($loggedIn)
-                {
-                    return $credential;
-                } else
-                {
-                    setcookie('ssotok', null, -1, '/');
+                return $credential;
+            } else
+            {
+                setcookie('ssotok', null, -1, '/');
 
-                    return false;
-                }
+                return false;
             }
-            );
         }
+        );
 
         if (!$login)
         {
@@ -733,6 +746,84 @@ class SurveyController extends MainController
 
             $data['data'][$i][3] = $survey->unit;
             $data['data'][$i][4] = date('d M Y', strtotime($survey->start_date)). ' - '.date('d M Y', strtotime($survey->end_date));
+            $i++;
+        }
+
+        $count_data = count($data);
+        if ($count_data == 0)
+        {
+            $data['data'] = [];
+        } else
+        {
+            $count_data = count($data['data']);
+        }
+        $data['iTotalRecords'] = $data['iTotalDisplayRecords'] = $count_data;
+        $data = json_encode($data, JSON_PRETTY_PRINT);
+
+        return response($data, 200)->header('Content-Type', 'application/json');
+    }
+
+    public function ajaxSurveyActive()
+    {
+        $data = [];
+        $simsdm = new Simsdm();
+        $i = 0;
+        $date = date('Y-m-d');
+        $surveys = Survey::where('end_date','>=',$date)->get();
+
+        foreach ($surveys as $survey){
+            $data['data'][$i][0] = $survey->id;
+            $data['data'][$i][1] = $i + 1;
+            $data['data'][$i][2] = $survey->title;
+
+            $list_units = $simsdm->unitAll();
+            $usu = array("id"=>"","code"=>"USU","name"=>"Universitas Sumatera Utara");
+            array_push($list_units,$usu);
+
+            foreach ($list_units as $key=>$unit){
+                if (is_array($list_units) && !in_array($survey->unit, $unit)){
+                    unset($list_units[$key]);
+                }else{
+                    $survey->unit = $unit['name'];
+                }
+            }
+
+            $data['data'][$i][3] = $survey->unit;
+
+            $survey_objective = $survey->surveyObjective()->get();
+            if($survey_objective->contains('objective','USU')){
+                $data['data'][$i][4] = "Universitas Sumatera Utara";
+            }else
+            {
+                $objective = "";
+                $obj = [];
+                $list_units = $simsdm->unitAll();
+                $j = 0;
+                $k = $survey_objective->count() - 1;
+
+                foreach ($list_units as $key => $unit)
+                {
+                    if (empty($unit['code']))
+                    {
+                        unset($list_units[$key]);
+                    }
+                }
+
+                foreach ($list_units as $key => $unit)
+                {
+//                    echo $j. " ". $survey_objective[$j]->objective. " ". $unit['code']. "<br/>";
+                    if (in_array($survey_objective[$j]->objective, $unit)) {
+                        $objective.="<li>".$unit['name']."</li>";
+                    }
+                    if($j<$k){
+                        $j++;
+                    }
+                }
+
+                $data['data'][$i][4] = $objective;
+            }
+
+            $data['data'][$i][5] = date('d M Y', strtotime($survey->start_date)). ' - '.date('d M Y', strtotime($survey->end_date));
             $i++;
         }
 
