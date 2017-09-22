@@ -23,7 +23,7 @@ class SurveyController extends MainController
 
     public function __construct()
     {
-        $this->middleware('is_auth')->except('index');
+        $this->middleware('is_auth')->except('index','ajaxSurveyActive');
         $this->middleware('is_operator')->except('index', 'ajaxSurvey','ajaxSurveyActive','answer','answerStore');
 
         parent::__construct();
@@ -52,47 +52,33 @@ class SurveyController extends MainController
 
     public function index()
     {
-//        if (env('APP_ENV') == 'local')
-//        {
-//            $login = new \stdClass();
-//            $login->logged_in = true;
-//            $login->payload = new \stdClass();
-//            $login->payload->identity = env('USERNAME_LOGIN');
-//            $login->payload->user_id = env('ID_LOGIN');
-////            $login->payload->identity = env('LOGIN_USERNAME');
-////            $login->payload->user_id = env('LOGIN_ID');
-//
-//        } else
-//        {
-//            $login = JWTAuth::communicate('https://akun.usu.ac.id/auth/listen', @$_COOKIE['ssotok'], function ($credential)
-//            {
-//                $loggedIn = $credential->logged_in;
-//                if ($loggedIn)
-//                {
-//                    return $credential;
-//                } else
-//                {
-//                    setcookie('ssotok', null, -1, '/');
-//
-//                    return false;
-//                }
-//            }
-//            );
-//        }
-        $login = JWTAuth::communicate('https://akun.usu.ac.id/auth/listen', @$_COOKIE['ssotok'], function ($credential)
+        if (env('APP_ENV') == 'local')
         {
-            $loggedIn = $credential->logged_in;
-            if ($loggedIn)
-            {
-                return $credential;
-            } else
-            {
-                setcookie('ssotok', null, -1, '/');
+            $login = new \stdClass();
+            $login->logged_in = true;
+            $login->payload = new \stdClass();
+            $login->payload->identity = env('USERNAME_LOGIN');
+            $login->payload->user_id = env('ID_LOGIN');
+//            $login->payload->identity = env('LOGIN_USERNAME');
+//            $login->payload->user_id = env('LOGIN_ID');
 
-                return false;
+        } else
+        {
+            $login = JWTAuth::communicate('https://akun.usu.ac.id/auth/listen', @$_COOKIE['ssotok'], function ($credential)
+            {
+                $loggedIn = $credential->logged_in;
+                if ($loggedIn)
+                {
+                    return $credential;
+                } else
+                {
+                    setcookie('ssotok', null, -1, '/');
+
+                    return false;
+                }
             }
+            );
         }
-        );
 
         if (!$login)
         {
@@ -796,7 +782,6 @@ class SurveyController extends MainController
             }else
             {
                 $objective = "";
-                $obj = [];
                 $list_units = $simsdm->unitAll();
                 $j = 0;
                 $k = $survey_objective->count() - 1;
@@ -811,10 +796,10 @@ class SurveyController extends MainController
 
                 foreach ($list_units as $key => $unit)
                 {
-//                    echo $j. " ". $survey_objective[$j]->objective. " ". $unit['code']. "<br/>";
                     if (in_array($survey_objective[$j]->objective, $unit)) {
                         $objective.="<li>".$unit['name']."</li>";
                     }
+
                     if($j<$k){
                         $j++;
                     }
