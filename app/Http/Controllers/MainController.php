@@ -144,14 +144,16 @@ class MainController extends Controller
             $simsdm = new Simsdm();
 
             $user = $simsdm->getEmployee(Auth::user()->user_id);
-            $this->user_info = [
-                'username' => Auth::user()->username,
-                'full_name' => $user->full_name,
-                'photo' => $user->photo,
-                'work_unit' => $user->work_unit,
-                'type' => $user->type
+            if(isset($user)){
+                $this->user_info = [
+                    'username' => Auth::user()->username,
+                    'full_name' => $user->full_name,
+                    'photo' => $user->photo,
+                    'work_unit' => $user->work_unit,
+                    'type' => $user->type
 //                'email'     => $user->email,
-            ];
+                ];
+            }
         }
         View::share('user_info', $this->user_info);
     }
