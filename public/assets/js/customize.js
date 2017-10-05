@@ -16,16 +16,14 @@ function notify(message, type){
     })
 }
 
-function getUrlParameter(name) {
-    name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
-    var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
-    var results = regex.exec(location.search);
-    return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
-};
-
 $(document).ready(function () {
     var getUrl = window.location,
         baseUrl = getUrl.protocol + "//" + getUrl.host + "/";
+    var responsiveHelperAjax = undefined;
+    var breakpointDefinition = {
+        tablet: 1024,
+        phone: 480
+    };
 
     if ($("#survey-list-admin").length) {
         var auths = $('#auths').val();
@@ -271,65 +269,95 @@ $(document).ready(function () {
         var url = window.location.href.split("/");
         var survey_id = url[url.length-1];
 
-        var questionDatatable = $("#question-list").dataTable({
-            autoWidth: false,
-            responsive: true,
-            ajax: baseUrl + 'question/ajax?id='+ survey_id,
+        var questionDatatable = $("#question-list");
+        questionDatatable.dataTable({
             columnDefs: [
                 {
                     orderable: false,
-                    defaultContent: '<a class="btn btn-theme btn-sm rounded edit" data-toggle="tooltip" data-placement="top" title="Edit"><i class="fa fa-pencil" style="color:white;"></i></a>' +
-                    '<a data-toggle="tooltip" data-placement="top" data-original-title="Delete"><button class="btn btn-danger btn-sm rounded delete" data-toggle="modal" data-target="#delete"><i class="fa fa-times"></i></button></a>',
-                    targets: 5
+                    targets: [4,5]
                 },
                 {
                     className: "dt-center",
-                    targets: [1, 3, 4, 5]
-                },
-                {
-                    width: "5%",
-                    targets: 1
-                },
-                {
-                    visible: false,
-                    targets: 0
+                    targets: [0, 4, 5]
                 }
             ],
+            autoWidth: true,
+            processing: true,
+            serverSide: true,
+            ajax: baseUrl + 'question/ajax?id=' + survey_id + "&obj=" + $('#survey-objective').val(),
+            preDrawCallback: function () {
+                // Initialize the responsive datatables helper once.
+                if (!responsiveHelperAjax) {
+                    responsiveHelperAjax = new ResponsiveDatatablesHelper(questionDatatable, breakpointDefinition);
+                }
+            },
+            rowCallback: function (nRow) {
+                responsiveHelperAjax.createExpandIcon(nRow);
+                BlankonApp.handleTooltip();
+            },
+            drawCallback: function (oSettings) {
+                responsiveHelperAjax.respond();
+                BlankonApp.handleTooltip();
+            }
         });
 
-        $(document).on("click", "#question-list a button.delete", function (e) {
-            e.preventDefault();
+        $("#survey-objective").change(function () {
+            $.post(baseUrl + 'question/getSampleTotal',
+                {_token: $('meta[name=csrf-token]').attr('content'),
+                    obj: $("#survey-objective").val(), survey_id: survey_id
+                },
+                function(html){
+                    $("#jlhSampel").html(html);
+                }
+            );
 
-            var dt_row = $(this).closest("li").data("dt-row");
-
-            if (dt_row >= 0) {
-                var position = dt_row;
-            } else {
-                var target_row = $(this).closest("tr").get(0);
-                var position = questionDatatable.fnGetPosition(target_row);
-            }
-            var id = questionDatatable.fnGetData(position)[0];
-
-            $("#delete form").attr("action", baseUrl + "question/delete?id=" + id);
+            questionDatatable.dataTable().fnDestroy();
+            questionDatatable.dataTable({
+                columnDefs: [
+                    {
+                        orderable: false,
+                        targets: [4,5]
+                    },
+                    {
+                        className: "dt-center",
+                        targets: [0, 4, 5]
+                    }
+                ],
+                autoWidth: true,
+                processing: true,
+                serverSide: true,
+                ajax: baseUrl + 'question/ajax?id=' + survey_id + "&obj=" + $('#survey-objective').val(),
+                preDrawCallback: function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelperAjax) {
+                        responsiveHelperAjax = new ResponsiveDatatablesHelper(questionDatatable, breakpointDefinition);
+                        BlankonApp.handleTooltip();
+                    }
+                },
+                drawCallback: function (oSettings) {
+                    responsiveHelperAjax.respond();
+                    BlankonApp.handleTooltip();
+                }
+            });
         });
 
         $(document).on("click", "#question-list a.edit", function (e) {
             $("#edit").modal('show');
 
-            var dt_row = $(this).closest("li").data("dt-row");
-
-            if (dt_row >= 0) {
-                var position = dt_row;
-            } else {
-                var target_row = $(this).closest("tr").get(0);
-                var position = questionDatatable.fnGetPosition(target_row);
-            }
-            var qst_id = questionDatatable.fnGetData(position)[0];
-            var question = questionDatatable.fnGetData(position)[2];
+            var qst_id = $(this).attr('data-id1');
+            var question = $(this).attr('data-id2');
 
             $("#edit #qst_id").val(qst_id);
             $("#edit #question").val(question);
             $("#edit form").attr("action", baseUrl + "question/edit");
+        });
+
+        $(document).on("click", "#question-list a button.delete", function (e) {
+            e.preventDefault();
+
+            var id = $(this).attr('data-id');
+
+            $("#delete form").attr("action", baseUrl + "question/delete?id=" + id);
         });
     }
 
@@ -646,5 +674,29 @@ $(document).ready(function () {
     $(".deselectall").click(function(){
         $("#pilihan_tujuan option").removeAttr("selected");
         $('#pilihan_tujuan').val('').trigger("change");
+    });
+
+    $("#report select[name=survey]").change(function () {
+        if ($(this).val() != null) {
+
+            $.ajax({
+                url: baseUrl + 'survey/getObjective',
+                data: {
+                    id: $(this).val()
+                },
+                dataType: "json",
+                success: function (data) {
+                    var survey_obj = $("#report select[name=survey_obj]");
+                    survey_obj.find("option").remove();
+                    survey_obj.append("<option value='' disabled selected>Pilih Tujuan Survei</option>")
+                    survey_obj.select2('data', null);
+                    survey_obj.select2({placeholder: "-- Pilih Tujuan Survei --"});
+                    $.each(data, function (k, v) {
+                        survey_obj.append("<option value='" + v["name"] + "'>" + v["name"] + "</option>")
+                    });
+                    survey_obj.trigger("chosen: updated");
+                }
+            });
+        }
     });
 });

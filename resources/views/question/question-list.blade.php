@@ -98,16 +98,38 @@
                             </div>
                             <input type="hidden" id='id_survey' value='{{$survey['id']}}'>
                             {{csrf_field()}}
+
+                            <div class="panel-body no-padding">
+                                <div class="form-body form-horizontal form-bordered">
+                                    <div class="form-group">
+                                        <label for="scheme" class="col-sm-4 col-md-3 control-label">Tujuan Survey</label>
+                                        <div class="col-sm-7 mb-10">
+                                            <select id="survey-objective" name="objective" class="form-control select2" data-placeholder="-- Pilih Tujuan Survey--">
+                                                @foreach($list_units as $unit)
+                                                    <option value="{{$unit['code']}}">{{$unit['name']}}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="form-body form-horizontal form-bordered">
+                                            <label for="scheme" class="col-sm-4 col-md-3 control-label">Jumlah Sampel : <span id="jlhSampel"> {{$sample}} </span></label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
                             <div class="col-md-12">
                                 <div class="table-responsive mb-20">
                                 <table id="question-list" class="table table-striped table-theme">
                                     <thead>
                                     <tr>
-                                        <th>ID</th>
                                         <th>No.</th>
                                         <th>Pertanyaan</th>
                                         <th>Jenis Pilihan Jawaban</th>
                                         <th>Pilihan</th>
+                                        <th>Diagram</th>
                                         <th>Aksi</th>
                                     </tr>
                                     </thead>

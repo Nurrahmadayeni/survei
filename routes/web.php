@@ -27,14 +27,15 @@ Route::get('survey/answer/{id}', 'SurveyController@answer');
 Route::post('survey/answer', 'SurveyController@answerStore');
 Route::get('survey/report', 'SurveyController@report');
 Route::post('survey/report', 'SurveyController@showreport');
+Route::get('survey/getObjective', 'SurveyController@getObjective');
 
 Route::get('question/create/{id}', 'QuestionController@create');
 Route::post('question/create', 'QuestionController@store');
 Route::post('question/getQstTotal', 'QuestionController@getQstTotal');
+Route::post('question/getSampleTotal', 'QuestionController@getSampleTotal');
 Route::get('question/show/{id}', 'QuestionController@show');
 Route::get('question/ajax', 'QuestionController@getAjax');
 Route::post('question/edit', 'QuestionController@edit');
-
 Route::delete('question/delete', 'QuestionController@destroy');
 
 Route::get('users/', 'UserController@index');

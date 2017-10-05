@@ -19,11 +19,11 @@
     <ul id="tour-9" class="sidebar-menu">
 
         <!-- Start navigation - dashboard -->
-        <li class="submenu {!! Request::is('/','survey', 'survey/*') ? 'active' : null !!}">
+        <li class="submenu {!! Request::is('/','survey') ? 'active' : null !!}">
             <a href="{{url('/survey')}}">
                 <span class="icon"><i class="fa fa-list-alt"></i></span>
                 <span class="text">Survei</span>
-                {!! Request::is('/','survey', 'survey/*') ? '<span class="selected"></span>' : null !!}
+                {!! Request::is('/','survey') ? '<span class="selected"></span>' : null !!}
             </a>
         </li>
         @can('admin-menu')

@@ -172,6 +172,16 @@ class QuestionController extends MainController
         echo $question_total;
     }
 
+    public function getSampleTotal(Request $request)
+    {
+        $input = $request->all();
+
+        $count = $users = DB::table('user_answers')->select('username')->where('survey_id',$input['survey_id'])->where('unit',$input['obj'])->groupBy('username')->get();
+        $sample = $count->count();
+
+        echo $sample;
+    }
+
     public function show($id)
     {
         $survey = Survey::find($id);
@@ -198,12 +208,44 @@ class QuestionController extends MainController
         $page_title = 'Daftar Pertanyaan';
         $disabled = '';
 
+        $simsdm = new Simsdm();
+        $list_units = $simsdm->unitAll();
+        $usu = array("id"=>"","code"=>"USU","name"=>"Universitas Sumatera Utara");
+        array_push($list_units,$usu);
+
+        $survey_objective = $survey->surveyObjective()->get();
+        $j = 0;
+        $k = $survey_objective->count() - 1;
+
+        foreach ($list_units as $key => $unit)
+        {
+            if (empty($unit['code']))
+            {
+                unset($list_units[$key]);
+            }
+        }
+
+        foreach ($list_units as $key=>$unit){
+            if (!in_array($survey_objective[$j]->objective, $unit)) {
+                unset($list_units[$key]);
+            }
+
+            if($j<$k){
+                $j++;
+            }
+        }
+
+        $count = $users = DB::table('user_answers')->select('username')->where('survey_id',$id)->where('unit',$survey_objective[0]->objective)->groupBy('username')->get();
+        $sample = $count->count();
+
         return view('question.question-list', compact(
             'upd_mode',
             'action_url',
             'page_title',
             'disabled',
-            'survey'
+            'survey',
+            'list_units',
+            'sample'
         ));
     }
 
@@ -218,12 +260,14 @@ class QuestionController extends MainController
         foreach ($questions as $question)
         {
             $answerType = $question->answerType()->first();
-            $data['data'][$i][0] = $question->id;
-            $data['data'][$i][1] = $i + 1;
-            $data['data'][$i][2] = $question->question;
-            $data['data'][$i][3] = $answerType->type;
-            $data['data'][$i][4] = $question->choices;
-            $i++;
+            $data['data'][$i][0] = $i + 1;
+            $data['data'][$i][1] = $question->question;
+            $data['data'][$i][2] = $answerType->type;
+            $data['data'][$i][3] = $question->choices;
+            $data['data'][$i][4] = '<a data-id1="'.$question->id.'" class="btn btn-theme btn-sm rounded diagram" data-toggle="tooltip" data-placement="top" title="Lihat Diagram"><i class="fa fa-eye" style="color:white;"></i></a>';
+            $data['data'][$i][5] = '<a data-id1="'.$question->id.'" data-id2="'.$question->question.'" class="btn btn-theme btn-sm rounded edit" data-toggle="tooltip" data-placement="top" title="Edit"><i class="fa fa-pencil" style="color:white;"></i></a>';
+            $data['data'][$i][5].= '<a data-toggle="tooltip" data-placement="top" title="Delete"><button class="btn btn-danger btn-sm rounded delete" data-id="'.$question->id.'" data-toggle="modal" data-target="#delete"><i class="fa fa-times"></i></button></a>';
+                $i++;
         }
 
         $count_data = count($data);

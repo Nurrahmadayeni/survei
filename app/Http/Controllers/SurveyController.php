@@ -326,6 +326,7 @@ class SurveyController extends MainController
         array_push($this->js['scripts'], 'global/plugins/bower_components/jquery-validation/dist/jquery.validate.min.js');
         array_push($this->js['scripts'], 'global/plugins/bower_components/jquery.inputmask/dist/jquery.inputmask.bundle.min.js');
         array_push($this->js['plugins'], 'global/plugins/bower_components/jquery-ui/jquery-ui.js');
+        array_push($this->js['plugins'], 'js/loadingoverlay.min.js');
 
         View::share('css', $this->css);
         View::share('js', $this->js);
@@ -513,6 +514,8 @@ class SurveyController extends MainController
                 $user_answer->level= 'lecture';
             }
 
+            $user_answer->unit = $this->user_info['work_unit'];
+
             if(isset($data) && $type=='2'){
                 $val_chosen = "";
                 $i = 0;
@@ -609,8 +612,49 @@ class SurveyController extends MainController
 
     public function report()
     {
-        dd($this->user_info);
-        echo "asking survey will show report";
+        $page_title = 'Laporan Survei';
+        $survey= Survey::all();
+        return view('survey.survey-report', compact('page_title', 'survey'));
+    }
+
+    public function getObjective()
+    {
+        $input = Input::get('id');
+        $survey = Survey::find($input);
+        $survey_objective = $survey->surveyObjective()->get();
+        $simsdm = new Simsdm();
+
+        $list_units = $simsdm->unitAll();
+        $j = 0;
+        $k = $survey_objective->count() - 1;
+
+        foreach ($list_units as $key => $unit)
+        {
+            if (empty($unit['code']))
+            {
+                unset($list_units[$key]);
+            }
+        }
+
+        foreach ($list_units as $key => $unit)
+        {
+            if (empty($unit['code']))
+            {
+                unset($list_units[$key]);
+            }
+
+            if (!in_array($survey_objective[$j]->objective, $unit)) {
+                unset($list_units[$key]);
+            }
+
+            if($j<$k){
+                $j++;
+            }
+        }
+
+        $data = json_encode($list_units, JSON_PRETTY_PRINT);
+
+        return response($data, 200)->header('Content-Type', 'application/json');
     }
 
     public function showreport()
