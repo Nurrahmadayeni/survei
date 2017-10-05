@@ -573,6 +573,30 @@ $(document).ready(function () {
         });
     });
 
+    $('#form_addSurvey').on('submit', function (e) {
+        e.preventDefault();
+        $("#survey-update").val('Process . . .');
+        $("#survey-container").LoadingOverlay("show");
+        $.ajax({
+            url: baseUrl + 'survey/edit',
+            type:'POST',
+            data:$('#form_addSurvey').serialize(),
+            success:function(result){
+                $('html, body').animate({ scrollTop: 0 }, 300);
+                $("#survey-submit").val('Submit');
+                $("#survey-container").LoadingOverlay("hide", true);
+                console.log(result);
+                if(result=="success"){
+                    $('html, body').animate({ scrollTop: 0 }, 300);
+                    notify('Survey berhasil ditambah','success');
+                    setTimeout(function(){ window.open(baseUrl + "/survey", "_self"); }, 800);
+                }else{
+                    notify('Survey gaggal ditambah, silahkan periksa kembali inputan anda','danger');
+                }
+            }
+        });
+    });
+
     $("#data").DataTable();
 
     $('#back-top').on('click', function (e) {

@@ -170,9 +170,16 @@
                                         <div class="col-md-12">
                                             <div class="form-group">
                                                 @if($disabled == null)
-                                                    <button id="survey-submit" class="btn btn-success rounded btn-stroke btn-slideright"
-                                                            type="submit">Submit
-                                                    </button>
+                                                    @if($upd_mode == 'create')
+                                                        <button id="survey-submit" class="btn btn-success rounded btn-stroke btn-slideright"
+                                                                type="submit">Submit
+                                                        </button>
+                                                    @elseif($upd_mode == 'edit')
+                                                        <button id="survey-update" class="btn btn-success rounded btn-stroke btn-slideright"
+                                                                type="submit">Submit
+                                                        </button>
+                                                    @endif
+
                                                     <a href="{{url('/survey')}}" class="btn btn-danger rounded btn-stroke btn-slideright">Batal</a>
                                                 @endif
                                             </div>
