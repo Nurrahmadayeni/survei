@@ -54,14 +54,22 @@ class SurveyController extends MainController
     {
         if (env('APP_ENV') == 'local')
         {
+            $simsdm = new Simsdm();
             $login = new \stdClass();
             $login->logged_in = true;
             $login->payload = new \stdClass();
+            $login->payload->user_unit = new \stdClass();
             $login->payload->identity = env('USERNAME_LOGIN');
             $login->payload->user_id = env('ID_LOGIN');
+
 //            $login->payload->identity = env('LOGIN_USERNAME');
 //            $login->payload->user_id = env('LOGIN_ID');
 
+            $user = $simsdm->getEmployee(env('USERNAME_LOGIN'));
+            $login->payload->name = $user->full_name;
+            $login->payload->logged_in_as = 1;
+            $login->payload->user_unit->photo = $user->photo;
+            $login->payload->user_unit->code = $user->work_unit;
         } else
         {
             $login = JWTAuth::communicate('https://akun.usu.ac.id/auth/listen', @$_COOKIE['ssotok'], function ($credential)
@@ -73,7 +81,6 @@ class SurveyController extends MainController
                 } else
                 {
                     setcookie('ssotok', null, -1, '/');
-
                     return false;
                 }
             }
@@ -99,7 +106,6 @@ class SurveyController extends MainController
             $user->photo = $login->payload->user_unit->photo;
             $user->work_unit = $login->payload->user_unit->code;
             Auth::login($user);
-
 
             $this->setUserInfo();
             $page_title = 'Daftar Survei';
@@ -891,5 +897,41 @@ class SurveyController extends MainController
         $data = json_encode($data, JSON_PRETTY_PRINT);
 
         return response($data, 200)->header('Content-Type', 'application/json');
+    }
+
+    public function reportExcel(){
+        header("Content-Type: application/xls");
+        header("Content-Disposition: attachment; filename=report.xls");
+        header("Pragma: no-cache");
+        header("Expires: 0");
+
+        $simsdm = new Simsdm();
+        $list_units = $simsdm->unitAll();
+
+        foreach ($list_units as $key=>$unit){
+            if ($unit['type_str']!='Fakultas'){
+                unset($list_units[$key]);
+            }
+            if($unit['code']=='TESTFAK'){
+                unset($list_units[$key]);
+            }
+        }
+
+        echo "NO \t FAKULTAS \t Jumlah jawab survey \t Total mahasiswa \t Persen yang telah menjawab \n";
+        $sum_fac = [6291, 4703, 4163, 5489, 7093, 1977, 5214, 4251, 4619, 3598, 1588, 1082, 1805, 1108, 838, 2133];
+        $i = 0;
+        foreach ($list_units as $unit){
+            $j = $i+1;
+            echo $j."\t";
+            echo $unit['name']. "\t";
+
+            $count = UserAnswer::where('survey_id',1)->where('unit',$unit['code'])->groupBy('unit')->count();
+            $sum_percent = ($count / $sum_fac[$i]) * 100;
+            echo $count."\t".$sum_fac[$i]."\t";
+            echo number_format($sum_percent,2)."%";
+            echo "\n";
+
+            $i++;
+        }
     }
 }
