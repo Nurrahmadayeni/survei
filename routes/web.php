@@ -21,7 +21,7 @@ Route::post('survey/create', 'SurveyController@store');
 Route::delete('survey/delete', 'SurveyController@destroy');
 Route::get('survey/show/{id}', 'SurveyController@show');
 Route::get('survey/edit/{id}', 'SurveyController@edit');
-Route::post('survey/edit', 'SurveyController@update');
+Route::put('survey/edit', 'SurveyController@update');
 Route::get('survey/copy/{id}', 'SurveyController@copy');
 Route::get('survey/answer/{id}', 'SurveyController@answer');
 Route::post('survey/answer', 'SurveyController@answerStore');

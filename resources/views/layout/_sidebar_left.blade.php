@@ -9,7 +9,7 @@
             </a>
             <div class="media-body">
                 <h4 class="media-heading">Hello, <span id='username'>{{$user_info['full_name']}}</span></h4>
-                <small>NIP : {{$user_info['username']}}</small>
+                <small>Identitas : {{$user_info['username']}}</small>
             </div>
         </div>
     </div><!-- /.sidebar-content -->

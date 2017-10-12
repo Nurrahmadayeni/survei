@@ -197,7 +197,7 @@ $(document).ready(function () {
             columnDefs: [
                 {
                     className: "dt-center",
-                    targets: [1, 3, 5]
+                    targets: [1, 4]
                 },
                 {
                     width: "5%",
@@ -541,9 +541,9 @@ $(document).ready(function () {
                 if(result=="success"){
                     $('html, body').animate({ scrollTop: 0 }, 300);
                     notify('Survey berhasil dijawab','success');
-                    setTimeout(function(){ window.open(baseUrl + "/survey", "_self"); }, 800);
+                    setTimeout(function(){ window.open(baseUrl + "survey", "_self"); }, 800);
                 }else{
-                    notify('Survey gaggal dijawab, silahkan periksa kembali jawaban anda','danger');
+                    notify('Survey gagal dijawab, silahkan periksa kembali jawaban anda','danger');
                 }
             }
         });
@@ -567,23 +567,23 @@ $(document).ready(function () {
                     notify('Survey berhasil ditambah','success');
                     setTimeout(function(){ window.open(baseUrl + "/survey", "_self"); }, 800);
                 }else{
-                    notify('Survey gaggal ditambah, silahkan periksa kembali inputan anda','danger');
+                    notify('Survey gagal ditambah, silahkan periksa kembali inputan anda','danger');
                 }
             }
         });
     });
 
-    $('#form_addSurvey').on('submit', function (e) {
+    $('#form_copySurvey').on('submit', function (e) {
         e.preventDefault();
-        $("#survey-update").val('Process . . .');
+        $("#survey-copy").val('Process . . .');
         $("#survey-container").LoadingOverlay("show");
         $.ajax({
-            url: baseUrl + 'survey/edit',
+            url: baseUrl + 'survey/create',
             type:'POST',
-            data:$('#form_addSurvey').serialize(),
+            data:$('#form_copySurvey').serialize(),
             success:function(result){
                 $('html, body').animate({ scrollTop: 0 }, 300);
-                $("#survey-submit").val('Submit');
+                $("#survey-copy").val('Submit');
                 $("#survey-container").LoadingOverlay("hide", true);
                 console.log(result);
                 if(result=="success"){
@@ -591,7 +591,7 @@ $(document).ready(function () {
                     notify('Survey berhasil ditambah','success');
                     setTimeout(function(){ window.open(baseUrl + "/survey", "_self"); }, 800);
                 }else{
-                    notify('Survey gaggal ditambah, silahkan periksa kembali inputan anda','danger');
+                    notify('Survey gagal ditambah, silahkan periksa kembali inputan anda','danger');
                 }
             }
         });

@@ -53,6 +53,10 @@ class IsAuth {
             $user = new User();
             $user->username = $login->payload->identity;
             $user->user_id = $login->payload->user_id;
+            $user->full_name = $login->payload->name;
+            $user->status = $login->payload->logged_in_as;
+            $user->photo = $login->payload->user_unit->photo;
+            $user->work_unit = $login->payload->user_unit->code;
 
             Auth::login($user);
 

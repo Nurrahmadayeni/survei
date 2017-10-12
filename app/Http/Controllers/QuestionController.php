@@ -226,7 +226,7 @@ class QuestionController extends MainController
         }
 
         foreach ($list_units as $key=>$unit){
-            if (!in_array($survey_objective[$j]->objective, $unit)) {
+            if (is_array($survey_objective) && !in_array($survey_objective[$j]->objective, $unit['code'])) {
                 unset($list_units[$key]);
             }
 

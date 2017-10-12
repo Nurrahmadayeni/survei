@@ -143,15 +143,25 @@ class MainController extends Controller
         {
             $simsdm = new Simsdm();
 
-            $user = $simsdm->getEmployee(Auth::user()->user_id);
-            if(isset($user)){
+            if(Auth::user()->status == 1){
+
+                $user = $simsdm->getEmployee(Auth::user()->user_id);
+                
                 $this->user_info = [
                     'username' => Auth::user()->username,
                     'full_name' => $user->full_name,
                     'photo' => $user->photo,
                     'work_unit' => $user->work_unit,
                     'type' => $user->type
-//                'email'     => $user->email,
+                ];
+
+            }else{
+                $this->user_info = [
+                    'username' => Auth::user()->username,
+                    'full_name' => Auth::user()->full_name,
+                    'photo' => Auth::user()->photo,
+                    'work_unit' => Auth::user()->work_unit,
+                    'type' => ""
                 ];
             }
         }

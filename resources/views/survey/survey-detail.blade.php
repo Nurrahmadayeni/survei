@@ -78,8 +78,14 @@
                                     <a href="{{url('/')}}" class="btn btn-danger rounded">Batal</a>
                                 </div>
                             @endif
-                                {{--action="{{url($action_url)}}"--}}
-                            <form id="form_addSurvey" method="post" enctype="multipart/form-data">
+                                
+                            @if($upd_mode == 'create')
+                                <form id="form_addSurvey" method="post" enctype="multipart/form-data">
+                            @elseif($upd_mode == 'copy')
+                                <form id="form_copySurvey" method="post" enctype="multipart/form-data">
+                            @elseif($upd_mode == 'edit')
+                                <form action="{{url($action_url)}}" method="post" enctype="multipart/form-data">
+                            @endif
                                 @if($upd_mode != 'create')
                                     <input name="id" type="hidden" value="{{$survey['id']}}">
                                 @endif
@@ -172,6 +178,10 @@
                                                 @if($disabled == null)
                                                     @if($upd_mode == 'create')
                                                         <button id="survey-submit" class="btn btn-success rounded btn-stroke btn-slideright"
+                                                                type="submit">Submit
+                                                        </button>
+                                                    @elseif($upd_mode == 'copy')
+                                                        <button id="survey-copy" class="btn btn-success rounded btn-stroke btn-slideright"
                                                                 type="submit">Submit
                                                         </button>
                                                     @elseif($upd_mode == 'edit')

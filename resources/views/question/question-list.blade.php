@@ -98,7 +98,7 @@
                             </div>
                             <input type="hidden" id='id_survey' value='{{$survey['id']}}'>
                             {{csrf_field()}}
-
+                            
                             <div class="panel-body no-padding">
                                 <div class="form-body form-horizontal form-bordered">
                                     <div class="form-group">

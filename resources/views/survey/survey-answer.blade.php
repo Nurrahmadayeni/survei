@@ -40,7 +40,18 @@
                         </div><!-- /.panel-heading -->
 
                         <div id="survey-container" class="panel-body">
+                             @php $url = $_SERVER["REQUEST_URI"];  
+                                $link_array = explode('/',$url);
+                                $page = end($link_array); 
+                            @endphp
+                            @if($page=='3' || $page=='4' || $page=='5' || $page=='6')
+                                <div class="panel">
+                                    <span class="text-danger"><i><b>Keterangan : <br/>1. Tidak Puas / Not Satisfied at All; 2. Kurang Puas / Not Very Satisfied; 3.Netral / Neutral;        
+                                    4.Puas / Satisfied; 5. Sangat Puas / Very Satisfied</b></i></span>
+                                </div>
+                            @endif
                             @if($disabled == null)
+                           {{-- action="{{url("survey/answer")}}" --}}
                                 <form id="form_question" method="post" enctype="multipart/form-data">
                                     @php $no=1; @endphp
                                     @foreach($questions as $question)
@@ -56,13 +67,12 @@
 
                                                 @if($question->answer_type=='1')
                                                     @php $val = explode(', ', $question->choices); @endphp
-                                                        @for($i=0; $i<=count($val)-1; $i++)
-                                                            <div class='rdio radio-inline rdio-theme rounded'>
-                                                                <input class='radio-inline' id='answerR{{$no}}{{$i}}' required type='radio' name='answer[{{$question->id}}]' value='{{$val[$i]}}'>
-                                                                <label for='answerR{{$no}}{{$i}}'>{{$val[$i]}}</label>
-                                                            </div>
-                                                            <br/>
-                                                        @endfor
+                                                    @for($i=0; $i<=count($val)-1; $i++)
+                                                        <div class='rdio radio-inline rdio-theme rounded'>
+                                                            <input class='radio-inline' id='answerR{{$no}}{{$i}}' required type='radio' name='answer[{{$question->id}}]' value='{{$val[$i]}}'>
+                                                            <label for='answerR{{$no}}{{$i}}'>{{$val[$i]}}</label>
+                                                        </div>
+                                                    @endfor
                                                @elseif($question->answer_type=='2')
                                                     @php $val = explode(', ', $question->choices); @endphp
                                                     @for($i=0; $i<=count($val)-1; $i++)
@@ -114,7 +124,6 @@
                                                         <input class='radio-inline' id='answerR{{$no}}{{$i}}' required type='radio' value='{{$val[$i]}}' {{$val[$i] == $answer->answer ? 'checked' : null}} {{$disabled}}>
                                                         <label for='answerR{{$no}}{{$i}}'>{{$val[$i]}}</label>
                                                     </div>
-                                                    <br/>
                                                 @endfor
                                             @elseif($answer->answer_type=='2')
                                                 @php $val = explode(', ', $answer->question['choices']); @endphp

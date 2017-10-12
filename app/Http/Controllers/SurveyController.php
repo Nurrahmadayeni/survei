@@ -94,7 +94,12 @@ class SurveyController extends MainController
             $user = new User();
             $user->username = $login->payload->identity;
             $user->user_id = $login->payload->user_id;
+            $user->full_name = $login->payload->name;
+            $user->status = $login->payload->logged_in_as;
+            $user->photo = $login->payload->user_unit->photo;
+            $user->work_unit = $login->payload->user_unit->code;
             Auth::login($user);
+
 
             $this->setUserInfo();
             $page_title = 'Daftar Survei';
@@ -118,10 +123,8 @@ class SurveyController extends MainController
     public function create()
     {
         array_push($this->css['pages'], 'global/plugins/bower_components/bootstrap-datepicker-vitalets/css/datepicker.css');
-        array_push($this->css['pages'], 'global/plugins/bower_components/bootstrap-daterangepicker/css/daterangepicker.css');
 
         array_push($this->js['scripts'], 'global/plugins/bower_components/bootstrap-datepicker-vitalets/js/bootstrap-datepicker.js');
-        array_push($this->js['scripts'], 'global/plugins/bower_components/bootstrap-daterangepicker/js/daterangepicker.js');
         array_push($this->js['scripts'], 'global/plugins/bower_components/jquery-validation/dist/jquery.validate.min.js');
         array_push($this->js['plugins'], 'global/plugins/bower_components/jquery-ui/jquery-ui.js');
         array_push($this->js['plugins'], 'js/loadingoverlay.min.js');
@@ -367,6 +370,8 @@ class SurveyController extends MainController
 
         if($user_auth->contains('auth_type','SU')){
             $units = $simsdm->unitAll();
+            $usu = array("id"=>"","code"=>"USU","name"=>"Universitas Sumatera Utara");
+            array_push($units,$usu);
         }else{
             foreach ($user_auth as $user){
                 $list_units = $simsdm->unitAll();
@@ -405,6 +410,10 @@ class SurveyController extends MainController
         $survey->end_date = date('Y-m-d', strtotime($request->end_date));
 
         if($request->is_subject=='0'){
+        	$survey->student = null;
+        	$survey->lecture = null;
+        	$survey->employee = null;
+
             foreach ($request->sample as $key => $value) {
                 $survey->$value = '1';
             }
@@ -459,11 +468,6 @@ class SurveyController extends MainController
 
     public function answer($id)
     {
-        array_push($this->css['pages'], 'global/plugins/bower_components/bootstrap-datepicker-vitalets/css/datepicker.css');
-        array_push($this->css['pages'], 'global/plugins/bower_components/bootstrap-daterangepicker/css/daterangepicker.css');
-
-        array_push($this->js['scripts'], 'global/plugins/bower_components/bootstrap-datepicker-vitalets/js/bootstrap-datepicker.js');
-        array_push($this->js['scripts'], 'global/plugins/bower_components/bootstrap-daterangepicker/js/daterangepicker.js');
         array_push($this->js['scripts'], 'global/plugins/bower_components/jquery-validation/dist/jquery.validate.min.js');
         array_push($this->js['plugins'], 'global/plugins/bower_components/jquery-ui/jquery-ui.js');
         array_push($this->js['plugins'], 'js/loadingoverlay_progress.min.js');
@@ -497,7 +501,9 @@ class SurveyController extends MainController
     public function answerStore()
     {
         $data = Input::get('chosen');
+
         foreach (Input::get('qst_id') as $key => $value) {
+
             $user_answer = new UserAnswer();
 
             $type = Input::get('answer_type')[$key];
@@ -508,11 +514,17 @@ class SurveyController extends MainController
             $user_answer->answer_type = $type;
             $user_answer->subject_id = "";
 
-            if($this->user_info['type'] == 1 || $this->user_info['type'] == 5){
-                $user_answer->level= 'employee';
-            }else{
-                $user_answer->level= 'lecture';
-            }
+            $type = $this->user_info['type'];
+	        
+
+	        if($type=='0' || $type=='2' || $type=='3' || $type=='4'){
+	            $user_answer->level= 'lecture';
+	        }else if($type=='1' || $type=='5'){
+	            $user_answer->level= 'employee';
+	        }else{
+	            $user_answer->level= 'student';
+	        }
+
 
             $user_answer->unit = $this->user_info['work_unit'];
 
@@ -546,10 +558,8 @@ class SurveyController extends MainController
     public function copy($id)
     {
         array_push($this->css['pages'], 'global/plugins/bower_components/bootstrap-datepicker-vitalets/css/datepicker.css');
-        array_push($this->css['pages'], 'global/plugins/bower_components/bootstrap-daterangepicker/css/daterangepicker.css');
 
         array_push($this->js['scripts'], 'global/plugins/bower_components/bootstrap-datepicker-vitalets/js/bootstrap-datepicker.js');
-        array_push($this->js['scripts'], 'global/plugins/bower_components/bootstrap-daterangepicker/js/daterangepicker.js');
         array_push($this->js['scripts'], 'global/plugins/bower_components/jquery-validation/dist/jquery.validate.min.js');
         array_push($this->js['plugins'], 'global/plugins/bower_components/jquery-ui/jquery-ui.js');
         array_push($this->js['plugins'], 'js/loadingoverlay.min.js');
@@ -745,11 +755,11 @@ class SurveyController extends MainController
         $i = 0;
 
         $type = $this->user_info['type'];
-        $work_unit = $this->user_info['work_unit'];;
+        $work_unit = $this->user_info['work_unit'];
 
-        if($type=='0' || $type=='1' || $type=='2' || $type=='3' || $type=='4'){
+        if($type=='0' || $type=='2' || $type=='3' || $type=='4'){
             $surveys = Survey::whereHas('SurveyObjective', function($q) use($work_unit) { $q->where('objective',$work_unit);})->where('lecture', '1')->get();
-        }else if($type=='5'){
+        }else if($type=='1' || $type=='5'){
             $surveys = Survey::whereHas('SurveyObjective', function($q) use($work_unit) { $q->where('objective',$work_unit);})->where('employee', '1')->get();
         }else{
             $surveys = Survey::whereHas('SurveyObjective', function($q) use($work_unit) { $q->where('objective',$work_unit);})->where('student', '1')->get();
@@ -820,9 +830,22 @@ class SurveyController extends MainController
 
             $data['data'][$i][3] = $survey->unit;
 
+            $sample='';
+            if($survey->student=='1'){
+                $sample = 'Mahasiswa ';
+            }
+            if($survey->lecture=='1'){
+                $sample.= "Dosen ";
+            }
+            if($survey->employee=='1'){
+                $sample.='Pegawai ';
+            }
+
+            $data['data'][$i][4] = $sample;
+
             $survey_objective = $survey->surveyObjective()->get();
             if($survey_objective->contains('objective','USU')){
-                $data['data'][$i][4] = "Universitas Sumatera Utara";
+                $data['data'][$i][5] = "Universitas Sumatera Utara";
             }else
             {
                 $objective = "";
@@ -849,10 +872,10 @@ class SurveyController extends MainController
                     }
                 }
 
-                $data['data'][$i][4] = $objective;
+                $data['data'][$i][5] = $objective;
             }
 
-            $data['data'][$i][5] = date('d M Y', strtotime($survey->start_date)). ' - '.date('d M Y', strtotime($survey->end_date));
+            $data['data'][$i][6] = date('d M Y', strtotime($survey->start_date)). ' - '.date('d M Y', strtotime($survey->end_date));
             $i++;
         }
 

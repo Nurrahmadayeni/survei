@@ -13,6 +13,7 @@ class UserAnswer extends Model
         'question_id',
         'answer_type',
         'subject_id',
+        'unit',
         'level',
         'answer',
     ];

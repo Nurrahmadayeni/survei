@@ -98,6 +98,7 @@
                             <th>No.</th>
                             <th>Judul Survei</th>
                             <th>Survei</th>
+                            <th>Objective</th>
                             <th>Tujuan Survei</th>
                             <th>Jangka Waktu</th>
                         </tr>
