@@ -54,14 +54,22 @@ class SurveyController extends MainController
     {
         if (env('APP_ENV') == 'local')
         {
+            $simsdm = new Simsdm();
             $login = new \stdClass();
             $login->logged_in = true;
             $login->payload = new \stdClass();
+            $login->payload->user_unit = new \stdClass();
             $login->payload->identity = env('USERNAME_LOGIN');
             $login->payload->user_id = env('ID_LOGIN');
+
 //            $login->payload->identity = env('LOGIN_USERNAME');
 //            $login->payload->user_id = env('LOGIN_ID');
 
+            $user = $simsdm->getEmployee(env('USERNAME_LOGIN'));
+            $login->payload->name = $user->full_name;
+            $login->payload->logged_in_as = 1;
+            $login->payload->user_unit->photo = $user->photo;
+            $login->payload->user_unit->code = $user->work_unit;
         } else
         {
             $login = JWTAuth::communicate('https://akun.usu.ac.id/auth/listen', @$_COOKIE['ssotok'], function ($credential)
@@ -73,7 +81,6 @@ class SurveyController extends MainController
                 } else
                 {
                     setcookie('ssotok', null, -1, '/');
-
                     return false;
                 }
             }
@@ -99,7 +106,6 @@ class SurveyController extends MainController
             $user->photo = $login->payload->user_unit->photo;
             $user->work_unit = $login->payload->user_unit->code;
             Auth::login($user);
-
 
             $this->setUserInfo();
             $page_title = 'Daftar Survei';
@@ -895,7 +901,11 @@ class SurveyController extends MainController
 
     public function reportExcel(){
         header("Content-Type: application/xls");
+<<<<<<< HEAD
         header("Content-Disposition: attachment; filename=Persentase Hasil Survei.xls");
+=======
+        header("Content-Disposition: attachment; filename=report.xls");
+>>>>>>> 3003640a8b3650e54a6634c517166e6524279816
         header("Pragma: no-cache");
         header("Expires: 0");
 
@@ -910,7 +920,11 @@ class SurveyController extends MainController
                 unset($list_units[$key]);
             }
         }
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> 3003640a8b3650e54a6634c517166e6524279816
         echo "NO \t FAKULTAS \t Jumlah jawab survey \t Total mahasiswa \t Persen yang telah menjawab \n";
         $sum_fac = [6291, 4703, 4163, 5489, 7093, 1977, 5214, 4251, 4619, 3598, 1588, 1082, 1805, 1108, 838, 2133];
         $i = 0;
@@ -919,6 +933,7 @@ class SurveyController extends MainController
             echo $j."\t";
             echo $unit['name']. "\t";
 
+<<<<<<< HEAD
             $count = DB::table('user_answers')->select('username')->where('unit',$unit['code'])
             		->where('survey_id',3)->groupBy('username','unit')->get();
             $count_sample = $count->count();
@@ -926,6 +941,11 @@ class SurveyController extends MainController
             $sum_percent = ($count_sample / $sum_fac[$i]) * 100;
 
             echo $count_sample."\t".$sum_fac[$i]."\t";
+=======
+            $count = UserAnswer::where('survey_id',1)->where('unit',$unit['code'])->groupBy('unit')->count();
+            $sum_percent = ($count / $sum_fac[$i]) * 100;
+            echo $count."\t".$sum_fac[$i]."\t";
+>>>>>>> 3003640a8b3650e54a6634c517166e6524279816
             echo number_format($sum_percent,2)."%";
             echo "\n";
 
