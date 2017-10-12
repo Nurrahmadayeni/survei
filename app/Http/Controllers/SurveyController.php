@@ -23,8 +23,8 @@ class SurveyController extends MainController
 
     public function __construct()
     {
-        $this->middleware('is_auth')->except('index','ajaxSurveyActive');
-        $this->middleware('is_operator')->except('index', 'ajaxSurvey','ajaxSurveyActive','answer','answerStore');
+        $this->middleware('is_auth')->except('index','ajaxSurveyActive','reportExcel');
+        $this->middleware('is_operator')->except('index', 'ajaxSurvey','ajaxSurveyActive','answer','answerStore','reportExcel');
 
         parent::__construct();
 
@@ -891,5 +891,45 @@ class SurveyController extends MainController
         $data = json_encode($data, JSON_PRETTY_PRINT);
 
         return response($data, 200)->header('Content-Type', 'application/json');
+    }
+
+    public function reportExcel(){
+        header("Content-Type: application/xls");
+        header("Content-Disposition: attachment; filename=Persentase Hasil Survei.xls");
+        header("Pragma: no-cache");
+        header("Expires: 0");
+
+        $simsdm = new Simsdm();
+        $list_units = $simsdm->unitAll();
+
+        foreach ($list_units as $key=>$unit){
+            if ($unit['type_str']!='Fakultas'){
+                unset($list_units[$key]);
+            }
+            if($unit['code']=='TESTFAK'){
+                unset($list_units[$key]);
+            }
+        }
+        
+        echo "NO \t FAKULTAS \t Jumlah jawab survey \t Total mahasiswa \t Persen yang telah menjawab \n";
+        $sum_fac = [6291, 4703, 4163, 5489, 7093, 1977, 5214, 4251, 4619, 3598, 1588, 1082, 1805, 1108, 838, 2133];
+        $i = 0;
+        foreach ($list_units as $unit){
+            $j = $i+1;
+            echo $j."\t";
+            echo $unit['name']. "\t";
+
+            $count = DB::table('user_answers')->select('username')->where('unit',$unit['code'])
+            		->where('survey_id',3)->groupBy('username','unit')->get();
+            $count_sample = $count->count();
+
+            $sum_percent = ($count_sample / $sum_fac[$i]) * 100;
+
+            echo $count_sample."\t".$sum_fac[$i]."\t";
+            echo number_format($sum_percent,2)."%";
+            echo "\n";
+
+            $i++;
+        }
     }
 }

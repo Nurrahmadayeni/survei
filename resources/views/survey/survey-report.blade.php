@@ -37,25 +37,13 @@
                             {{--id='report_coop'--}}
                             <form action="report" method="post" enctype="multipart/form-data">
                                 {{csrf_field()}}
-                                <div class="form-group" id="report">
-                                    <div class="row">
-                                        <div class="col-sm-3 text-danger text-center"><small>Jenis Survei</small></div>
-                                        <div class="col-sm-3 text-danger text-center"><small><i>Tanggal Tanda Tangan</i></small></div>
-                                        <div class="col-sm-3 text-danger text-center"><small><i>Tanggal Berakhir Kerjasama</i></small></div>
-                                        <div class="col-sm-3"></div>
-                                    </div>
-                                    <div class="col-sm-3">
-                                        <select class="select2 multiple mb-15" name='survey' id="survey" data-placeholder="Pilih Survei" required>
-                                            @foreach($survey as $s)
-                                                <option value="{{$s->id}}">{{$s->title}}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="col-sm-3">
-                                        <select class="select2 multiple mb-15" name='survey_obj' id="survey_obj" data-placeholder="Pilih Tujuan Survei" required>
-
-                                        </select>
-                                    </div>
+                                <div id="report" class="form-group">
+                                    <label for="unit" class="control-label">Pilih Judul Survey</label>
+                                     <select class="select2 multiple mb-15" name='survey' id="survey" data-placeholder="Pilih Survei" required>
+                                        @foreach($survey as $s)
+                                            <option value="{{$s->id}}">{{$s->title}}</option>
+                                        @endforeach
+                                    </select>
                                 </div>
                                 <div class="clearfix"></div>
                                 <br/>

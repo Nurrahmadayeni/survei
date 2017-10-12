@@ -154,7 +154,6 @@ class MainController extends Controller
                     'work_unit' => $user->work_unit,
                     'type' => $user->type
                 ];
-
             }else{
                 $this->user_info = [
                     'username' => Auth::user()->username,
