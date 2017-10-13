@@ -688,40 +688,53 @@ class SurveyController extends MainController
 
     public function downloadReport()
     {
-        $simsdm = new Simsdm();
         $data = [];
+        $datum = [];
         $i = 0;
 
         if(Input::get('id2')=='all'){
-            $answers = UserAnswer::where('survey_id',Input::get('id1'))->groupBy('username')->get();
+            $answers = UserAnswer::where('survey_id',Input::get('id1'))->get();
         }else{
-            $answers = UserAnswer::where('survey_id',Input::get('id1'))->where('unit',Input::get('id2'))->groupBy('username')->get();
+            $answers = UserAnswer::where('survey_id',Input::get('id1'))->where('unit',Input::get('id2'))->get();
         }
 
         $survey = Survey::find(Input::get('id1'));
 
         if(Input::get('mode')==1){
-            foreach ($answers as $answer){
-
-                $data[$i]['No'] = $i + 1;
-                $data[$i]['Identitas'] = $answer->username;
-                $data[$i]['Unit'] = $answer->unit;
-                $data[$i]['Level'] = $answer->level;
-
-                $j = 1;
-                $questions = Question::where('survey_id',Input::get('id1'))->get();
-                foreach ($questions as $question){
-                    $ans = UserAnswer::where('username',$answer->username)->where('question_id',$question->id)->first();
-                    $data[$i]['Q'.$j] = $ans->answer;
-                    $j++;
+            $prevIdent = null;
+            foreach($answers as $answer){
+                if($prevIdent==null || $answer->username!=$prevIdent){
+                    $data[$i]['No'] = $i+1;
+                    $prevIdent = $answer->username;
+                    $data[$i]['Identitas'] =  $answer->username;
+                    $data[$i]['Unit'] = $answer->unit;
+                    $data[$i]['Level'] = $answer->level;
+                    $data[$i]['qst'][] = $answer->answer;
+                }else{
+                    $data[$i-1]['qst'][] = $answer->answer;
                 }
 
                 $i++;
             }
 
-            return Excel::create('Laporan Survei', function($excel) use ($data, $survey) {
+            $j = 0;
+            foreach ($data as $dataa){
+                $datum[$j]['No'] = $j + 1;
+                $datum[$j]['Identitas'] = $dataa['Identitas'];
+                $datum[$j]['Unit'] = $dataa['Unit'];
+                $datum[$j]['Level'] = $dataa['Level'];
 
-                $excel->sheet('mySheet', function($sheet) use ($data, $survey)
+                $k=1;
+                foreach ($dataa['qst'] as $qst){
+                    $datum[$j]['Q'.$k] = $qst;
+                    $k++;
+                }
+                $j++;
+            }
+
+            return Excel::create('Laporan Survei', function($excel) use ($datum, $survey) {
+
+                $excel->sheet('mySheet', function($sheet) use ($datum, $survey)
                 {
                     $sheet->row(1, array($survey->title));
                     $sheet->mergeCells('A1:G1');
@@ -730,16 +743,17 @@ class SurveyController extends MainController
                         $row->setAlignment('center');
                     });
 
-                    $sheet->appendRow(array_keys($data[0]));
-                    $sheet->cell('A', function($cell) {
+                    $sheet->appendRow(array_keys($datum[0]));
+                    $sheet->cell('A:B', function($cell) {
                         $cell->setAlignment('center');
                     });
 
-                    foreach ($data as $survei) {
+                    foreach ($datum as $survei) {
                         $sheet->appendRow($survei);
                     }
                 });
             })->download('xls');
+
         }else{
             return abort('404');
         }
