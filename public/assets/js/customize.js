@@ -385,10 +385,6 @@ $(document).ready(function () {
         }
     });
 
-    if ($("input[name=upd_mode]").val() == 'display') {
-        $("#pustaha-container input:visible, #pustaha-container select:visible, #pustaha-container textarea:visible").attr("disabled", true);
-    }
-
     if ($(".select2").length) {
         $(".select2").select2();
     }
@@ -700,7 +696,7 @@ $(document).ready(function () {
         $('#pilihan_tujuan').val('').trigger("change");
     });
 
-    $("#report select[name=survey]").change(function () {
+    $("#report_container select[name=survey]").change(function () {
         if ($(this).val() != null) {
 
             $.ajax({
@@ -710,17 +706,46 @@ $(document).ready(function () {
                 },
                 dataType: "json",
                 success: function (data) {
-                    var survey_obj = $("#report select[name=survey_obj]");
+                    var survey_obj = $("#report_container select[name=survey_obj]");
                     survey_obj.find("option").remove();
                     survey_obj.append("<option value='' disabled selected>Pilih Tujuan Survei</option>")
                     survey_obj.select2('data', null);
                     survey_obj.select2({placeholder: "-- Pilih Tujuan Survei --"});
                     $.each(data, function (k, v) {
-                        survey_obj.append("<option value='" + v["name"] + "'>" + v["name"] + "</option>")
+                        survey_obj.append("<option value='" + v["code"] + "'>" + v["name"] + "</option>")
                     });
                     survey_obj.trigger("chosen: updated");
                 }
             });
         }
+    });
+
+    $('#form_report').on('submit', function (e) {
+        e.preventDefault();
+        $("#report-btn").val('Process . . .');
+        $("#report_result").LoadingOverlay("show");
+        var id1 = $('#survey').val();
+        var id2 = $('#survey_obj').val();
+        $.ajax({
+            url: baseUrl + 'survey/report',
+            type:'POST',
+            data:$('#form_report').serialize(),
+            success:function(result){
+                $('html, body').animate({ scrollTop: 0 }, 300);
+                $("#report-btn").val('Filter');
+                $("#report_result").LoadingOverlay("hide", true);
+                console.log(result);
+                if(result=="success"){
+                    $('html, body').animate({ scrollTop: 0 }, 300);
+                    $('#result_container').fadeIn('slow');
+                    $("#result_container #btn-download1").attr("href", baseUrl + "survey/reportDownload?mode=1&id1=" + id1 +"&id2="+id2);
+                    $("#result_container #btn-download2").attr("href", baseUrl + "survey/reportDownload?mode=2&id1=" + id1 +"&id2="+id2);
+                    // setTimeout(function(){ window.open(baseUrl + "survey", "_self"); }, 800);
+                }else{
+                    $('#result_container').fadeOut('slow');
+                    notify('Belum terdapat responden pada survei ini','danger');
+                }
+            }
+        });
     });
 });

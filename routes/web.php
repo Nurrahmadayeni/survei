@@ -29,6 +29,7 @@ Route::get('survey/report', 'SurveyController@report');
 Route::post('survey/report', 'SurveyController@showreport');
 Route::get('survey/reports', 'SurveyController@reportExcel');
 Route::get('survey/getObjective', 'SurveyController@getObjective');
+Route::get('survey/reportDownload', 'SurveyController@downloadReport');
 
 Route::get('question/create/{id}', 'QuestionController@create');
 Route::post('question/create', 'QuestionController@store');

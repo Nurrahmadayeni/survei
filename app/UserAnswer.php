@@ -20,7 +20,7 @@ class UserAnswer extends Model
 
     public function survey()
     {
-        return $this->belongsTo(Survey::class, 'survey_id', 'id');
+        return $this->belongsTo(Survey::class);
     }
 
     public function question()

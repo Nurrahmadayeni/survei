@@ -15,6 +15,7 @@ use App\Simsdm;
 use App\User;
 use App\UserAuth;
 use View;
+use Excel;
 use parinpan\fanjwt\libs\JWTAuth;
 
 class SurveyController extends MainController
@@ -521,7 +522,6 @@ class SurveyController extends MainController
             $user_answer->subject_id = "";
 
             $type = $this->user_info['type'];
-	        
 
 	        if($type=='0' || $type=='2' || $type=='3' || $type=='4'){
 	            $user_answer->level= 'lecture';
@@ -569,7 +569,6 @@ class SurveyController extends MainController
         array_push($this->js['scripts'], 'global/plugins/bower_components/jquery-validation/dist/jquery.validate.min.js');
         array_push($this->js['plugins'], 'global/plugins/bower_components/jquery-ui/jquery-ui.js');
         array_push($this->js['plugins'], 'js/loadingoverlay.min.js');
-
 
         View::share('css', $this->css);
         View::share('js', $this->js);
@@ -628,6 +627,9 @@ class SurveyController extends MainController
 
     public function report()
     {
+        array_push($this->js['plugins'], 'js/loadingoverlay.min.js');
+        View::share('js', $this->js);
+
         $page_title = 'Laporan Survei';
         $survey= Survey::all();
         return view('survey.survey-report', compact('page_title', 'survey'));
@@ -644,18 +646,14 @@ class SurveyController extends MainController
         $j = 0;
         $k = $survey_objective->count() - 1;
 
-        foreach ($list_units as $key => $unit)
-        {
-            if (empty($unit['code']))
-            {
+        foreach ($list_units as $key => $unit){
+            if (empty($unit['code'])){
                 unset($list_units[$key]);
             }
         }
 
-        foreach ($list_units as $key => $unit)
-        {
-            if (empty($unit['code']))
-            {
+        foreach ($list_units as $key => $unit){
+            if (empty($unit['code'])){
                 unset($list_units[$key]);
             }
 
@@ -667,6 +665,8 @@ class SurveyController extends MainController
                 $j++;
             }
         }
+        $all = array("id"=>"","code"=>"all","name"=>"Semua Unit");
+        array_unshift($list_units,$all);
 
         $data = json_encode($list_units, JSON_PRETTY_PRINT);
 
@@ -675,7 +675,74 @@ class SurveyController extends MainController
 
     public function showreport()
     {
-        echo "show report";
+        if(Input::get('survey_obj')=='all'){
+            $answer = UserAnswer::where('survey_id',Input::get('survey'))->first();
+        }else{
+            $answer = UserAnswer::where('survey_id',Input::get('survey'))->where('unit',Input::get('survey_obj'))->first();
+        }
+
+        if(!empty($answer)){
+            echo "success";
+        }
+    }
+
+    public function downloadReport()
+    {
+        $simsdm = new Simsdm();
+        $data = [];
+        $i = 0;
+
+        if(Input::get('id2')=='all'){
+            $answers = UserAnswer::where('survey_id',1)->groupBy('username')->get();
+        }else{
+            $answers = UserAnswer::where('survey_id',Input::get('id1'))->where('unit',Input::get('id2'))->groupBy('username')->get();
+        }
+
+        $survey = Survey::find(Input::get('id1'));
+
+        if(Input::get('mode')==1){
+            foreach ($answers as $answer){
+
+                $data[$i]['No'] = $i + 1;
+                $data[$i]['Identitas'] = $answer->username;
+                $data[$i]['Unit'] = $answer->unit;
+                $data[$i]['Level'] = $answer->level;
+
+                $j = 1;
+                $questions = Question::where('survey_id',Input::get('id1'))->get();
+                foreach ($questions as $question){
+                    $ans = UserAnswer::where('username',$answer->username)->where('question_id',$question->id)->first();
+                    $data[$i]['Q'.$j] = $ans->answer;
+                    $j++;
+                }
+
+                $i++;
+            }
+
+            return Excel::create('Laporan Survei', function($excel) use ($data, $survey) {
+
+                $excel->sheet('mySheet', function($sheet) use ($data, $survey)
+                {
+                    $sheet->row(1, array($survey->title));
+                    $sheet->mergeCells('A1:G1');
+                    $sheet->row(1, function ($row) {
+                        $row->setFontSize(14);
+                        $row->setAlignment('center');
+                    });
+
+                    $sheet->appendRow(array_keys($data[0]));
+                    $sheet->cell('A', function($cell) {
+                        $cell->setAlignment('center');
+                    });
+
+                    foreach ($data as $survei) {
+                        $sheet->appendRow($survei);
+                    }
+                });
+            })->download('xls');
+        }else{
+            return abort('404');
+        }
     }
 
     public function getAjax()
@@ -901,11 +968,7 @@ class SurveyController extends MainController
 
     public function reportExcel(){
         header("Content-Type: application/xls");
-<<<<<<< HEAD
         header("Content-Disposition: attachment; filename=Persentase Hasil Survei.xls");
-=======
-        header("Content-Disposition: attachment; filename=report.xls");
->>>>>>> 3003640a8b3650e54a6634c517166e6524279816
         header("Pragma: no-cache");
         header("Expires: 0");
 
@@ -920,11 +983,7 @@ class SurveyController extends MainController
                 unset($list_units[$key]);
             }
         }
-<<<<<<< HEAD
-        
-=======
 
->>>>>>> 3003640a8b3650e54a6634c517166e6524279816
         echo "NO \t FAKULTAS \t Jumlah jawab survey \t Total mahasiswa \t Persen yang telah menjawab \n";
         $sum_fac = [6291, 4703, 4163, 5489, 7093, 1977, 5214, 4251, 4619, 3598, 1588, 1082, 1805, 1108, 838, 2133];
         $i = 0;
@@ -932,20 +991,12 @@ class SurveyController extends MainController
             $j = $i+1;
             echo $j."\t";
             echo $unit['name']. "\t";
-
-<<<<<<< HEAD
             $count = DB::table('user_answers')->select('username')->where('unit',$unit['code'])
             		->where('survey_id',3)->groupBy('username','unit')->get();
             $count_sample = $count->count();
-
             $sum_percent = ($count_sample / $sum_fac[$i]) * 100;
-
             echo $count_sample."\t".$sum_fac[$i]."\t";
-=======
-            $count = UserAnswer::where('survey_id',1)->where('unit',$unit['code'])->groupBy('unit')->count();
-            $sum_percent = ($count / $sum_fac[$i]) * 100;
-            echo $count."\t".$sum_fac[$i]."\t";
->>>>>>> 3003640a8b3650e54a6634c517166e6524279816
+            echo $count_sample."\t".$sum_fac[$i]."\t";
             echo number_format($sum_percent,2)."%";
             echo "\n";
 
