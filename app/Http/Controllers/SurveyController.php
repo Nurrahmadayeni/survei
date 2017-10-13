@@ -693,7 +693,7 @@ class SurveyController extends MainController
         $i = 0;
 
         if(Input::get('id2')=='all'){
-            $answers = UserAnswer::where('survey_id',1)->groupBy('username')->get();
+            $answers = UserAnswer::where('survey_id',Input::get('id1'))->groupBy('username')->get();
         }else{
             $answers = UserAnswer::where('survey_id',Input::get('id1'))->where('unit',Input::get('id2'))->groupBy('username')->get();
         }
