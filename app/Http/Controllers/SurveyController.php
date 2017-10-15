@@ -508,6 +508,17 @@ class SurveyController extends MainController
     public function answerStore()
     {
         $data = Input::get('chosen');
+        $answer_exist = UserAnswer::where('survey_id',Input::get('survey_id'))->where('username',$this->user_info['username'])->first();
+
+        if(!empty($answer_exist)){
+        	return ('exist');
+        }
+
+        $survey = Survey::find(Input::get('survey_id'));
+        $question = $survey->question()->get();
+
+        $user_answers = new Collection();
+
 
         foreach (Input::get('qst_id') as $key => $value) {
 
@@ -516,7 +527,6 @@ class SurveyController extends MainController
             $type = Input::get('answer_type')[$key];
 
             $user_answer->username = $this->user_info['username'];
-            $user_answer->survey_id = Input::get('survey_id');
             $user_answer->question_id = $value;
             $user_answer->answer_type = $type;
             $user_answer->subject_id = "";
@@ -553,12 +563,20 @@ class SurveyController extends MainController
                 $user_answer->answer = $answer;
             }
 
-            DB::transaction(function () use ($user_answer){
-                $user_answer->save();
-            });
+            $user_answers->push($user_answer);
+
         }
 
-        echo "success";
+        if($user_answers->count() < $question->count()){
+        	return ('min');
+        }elseif($user_answers->count() > $question->count()){
+        	return ('max');
+        }elseif($user_answers->count() == $question->count()){
+        	if(isset($user_answers)){
+	            $survey->userAnswer()->saveMany($user_answers);
+	        }
+	        return ("success");
+        }
     }
 
     public function copy($id)
@@ -688,34 +706,61 @@ class SurveyController extends MainController
 
     public function downloadReport()
     {
+    	error_reporting(E_ALL);
+
         $data = [];
         $datum = [];
         $i = 0;
-
+        $id1 = Input::get('id1');
+        
+        
         if(Input::get('id2')=='all'){
-            $answers = UserAnswer::where('survey_id',Input::get('id1'))->get();
+        	// $answers = DB::table('user_answers')->where('survey_id',Input::get('id1'))->orderBy('id')->limit(2700,5400)->get();
+            // $answers = UserAnswer::where('survey_id',Input::get('id1'))->orderBy('id')->limit(5400)->offset(5400)->get();
+             $answers = UserAnswer::where('survey_id',Input::get('id1'))->orderBy('id')->skip(40500)->take(5400)->get();
         }else{
             $answers = UserAnswer::where('survey_id',Input::get('id1'))->where('unit',Input::get('id2'))->get();
         }
 
+        
         $survey = Survey::find(Input::get('id1'));
-
+        
         if(Input::get('mode')==1){
             $prevIdent = null;
+            $y = null;
+
             foreach($answers as $answer){
-                if($prevIdent==null || $answer->username!=$prevIdent){
-                    $data[$i]['No'] = $i+1;
+                
+                if($answer->username==null){
+                    $y = $i;
                     $prevIdent = $answer->username;
+                    $data[$i]['No'] = $i+1;
+                    $data[$i]['Identitas'] =  $answer->username;
+                    $data[$i]['Unit'] = $answer->unit;
+                    $data[$i]['Level'] = $answer->level;
+                    $data[$y]['qst'][] = $answer->answer;
+                }
+
+                if($answer->username==$prevIdent){    
+                    
+                    $data[$y]['qst'][] = $answer->answer;
+                }
+
+
+                if($answer->username!=$prevIdent){
+                    $prevIdent = $answer->username;
+                    $data[$i]['No'] = $i+1;
                     $data[$i]['Identitas'] =  $answer->username;
                     $data[$i]['Unit'] = $answer->unit;
                     $data[$i]['Level'] = $answer->level;
                     $data[$i]['qst'][] = $answer->answer;
-                }else{
-                    $data[$i-1]['qst'][] = $answer->answer;
+                    $y = $i;
                 }
 
                 $i++;
             }
+
+            // dd($data);
 
             $j = 0;
             foreach ($data as $dataa){
@@ -732,12 +777,15 @@ class SurveyController extends MainController
                 $j++;
             }
 
+            // dd($data);
+
+
             return Excel::create('Laporan Survei', function($excel) use ($datum, $survey) {
 
                 $excel->sheet('mySheet', function($sheet) use ($datum, $survey)
                 {
                     $sheet->row(1, array($survey->title));
-                    $sheet->mergeCells('A1:G1');
+                    $sheet->mergeCells('A1:AE1');
                     $sheet->row(1, function ($row) {
                         $row->setFontSize(14);
                         $row->setAlignment('center');

@@ -534,7 +534,11 @@ $(document).ready(function () {
                 $("#survey-submit").val('Submit');
                 $("#survey-container").LoadingOverlay("hide", true);
                 console.log(result);
-                if(result=="success"){
+                if(result=="exist" || result=="max"){
+                    notify('Gagal menyimpan jawaban, anda telah menjawab survey ini sebelumnya','danger');
+                }else if(result=="min"){
+                    notify('Gagal menyimpan jawaban, semua pertanyaan wajib dijawab','danger');
+                }else if(result=="success"){
                     $('html, body').animate({ scrollTop: 0 }, 300);
                     notify('Survey berhasil dijawab','success');
                     setTimeout(function(){ window.open(baseUrl + "survey", "_self"); }, 800);
