@@ -710,6 +710,7 @@ $(document).ready(function () {
                 },
                 dataType: "json",
                 success: function (data) {
+                    console.log(data);
                     var survey_obj = $("#report_container select[name=survey_obj]");
                     survey_obj.find("option").remove();
                     survey_obj.append("<option value='' disabled selected>Pilih Tujuan Survei</option>")

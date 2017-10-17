@@ -655,14 +655,16 @@ class SurveyController extends MainController
 
     public function getObjective()
     {
+
         $input = Input::get('id');
+        
         $survey = Survey::find($input);
-        $survey_objective = $survey->surveyObjective()->get();
+        $survey_objective = $survey->surveyObjective()->get()->toArray();
         $simsdm = new Simsdm();
 
         $list_units = $simsdm->unitAll();
         $j = 0;
-        $k = $survey_objective->count() - 1;
+        $k = sizeof($survey_objective) - 1;
 
         foreach ($list_units as $key => $unit){
             if (empty($unit['code'])){
@@ -670,23 +672,20 @@ class SurveyController extends MainController
             }
         }
 
-        foreach ($list_units as $key => $unit){
-            if (empty($unit['code'])){
-                unset($list_units[$key]);
-            }
+        $unit_lists = [];
 
-            if (!in_array($survey_objective[$j]->objective, $unit)) {
-                unset($list_units[$key]);
-            }
+        foreach($survey_objective as $obj){
+	        foreach ($list_units as $key=>$unit){
+	            if (is_array($list_units) && in_array($obj['objective'], $unit)){
+	                array_push($unit_lists, $unit);
+	            }
+	        }
+    	}
 
-            if($j<$k){
-                $j++;
-            }
-        }
         $all = array("id"=>"","code"=>"all","name"=>"Semua Unit");
-        array_unshift($list_units,$all);
+        array_unshift($unit_lists,$all);
 
-        $data = json_encode($list_units, JSON_PRETTY_PRINT);
+        $data = json_encode($unit_lists, JSON_PRETTY_PRINT);
 
         return response($data, 200)->header('Content-Type', 'application/json');
     }
