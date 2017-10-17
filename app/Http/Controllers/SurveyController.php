@@ -710,27 +710,45 @@ class SurveyController extends MainController
 
         $data = [];
         $datum = [];
+        $simsdm = new Simsdm();
         $i = 0;
         $id1 = Input::get('id1');
-        
+        $survey = Survey::find(Input::get('id1'));
+        $list_units = $simsdm->unitAll();
+
         
         if(Input::get('id2')=='all'){
-        	// $answers = DB::table('user_answers')->where('survey_id',Input::get('id1'))->orderBy('id')->limit(2700,5400)->get();
-            // $answers = UserAnswer::where('survey_id',Input::get('id1'))->orderBy('id')->limit(5400)->offset(5400)->get();
-             $answers = UserAnswer::where('survey_id',Input::get('id1'))->orderBy('id')->skip(40500)->take(5400)->get();
+            // $answers = UserAnswer::where('survey_id',Input::get('id1'))->orderBy('id')->skip(40500)->take(5400)->get();
+            $answers = new Collection();
+
+        	$objective = $survey->surveyObjective()->get();
+
+        	$x = 0;
+        	foreach ($objective as $obj) {
+        		$answers_temps = UserAnswer::where('survey_id',Input::get('id1'))->where('unit',$obj['objective'])->orderBy('username')->get();
+        		if(!$answers_temps->isEmpty()){
+        			foreach ($answers_temps as $answer) {
+	        			$answers->push($answer);	
+	        		}	
+        		}        		
+        	}
+            
         }else{
             $answers = UserAnswer::where('survey_id',Input::get('id1'))->where('unit',Input::get('id2'))->get();
         }
 
-        
-        $survey = Survey::find(Input::get('id1'));
         
         if(Input::get('mode')==1){
             $prevIdent = null;
             $y = null;
 
             foreach($answers as $answer){
-                
+                foreach ($list_units as $key=>$unit){
+                    if (is_array($list_units) && in_array($answer->unit, $unit)){
+                        $answer->unit = $unit['name'];
+                    }
+                }
+
                 if($answer->username==null){
                     $y = $i;
                     $prevIdent = $answer->username;
@@ -760,8 +778,6 @@ class SurveyController extends MainController
                 $i++;
             }
 
-            // dd($data);
-
             $j = 0;
             foreach ($data as $dataa){
                 $datum[$j]['No'] = $j + 1;
@@ -776,8 +792,6 @@ class SurveyController extends MainController
                 }
                 $j++;
             }
-
-            // dd($data);
 
 
             return Excel::create('Laporan Survei', function($excel) use ($datum, $survey) {
