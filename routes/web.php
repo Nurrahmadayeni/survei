@@ -11,8 +11,11 @@
 |
 */
 
+Route::get('/testGraph', 'TestingController@index');
+
 Route::get('/', 'SurveyController@index');
 Route::get('survey', 'SurveyController@index');
+Route::get('survey/admin', 'SurveyController@listAdmin');
 Route::get('survey/ajax', 'SurveyController@getAjax');
 Route::get('survey/ajaxSurvey', 'SurveyController@ajaxSurvey');
 Route::get('survey/ajaxSurveyActive', 'SurveyController@ajaxSurveyActive');
@@ -25,11 +28,14 @@ Route::put('survey/edit', 'SurveyController@update');
 Route::get('survey/copy/{id}', 'SurveyController@copy');
 Route::get('survey/answer/{id}', 'SurveyController@answer');
 Route::post('survey/answer', 'SurveyController@answerStore');
+Route::get('survey/showAnswer', 'SurveyController@showAnswer');
 Route::get('survey/report', 'SurveyController@report');
 Route::post('survey/report', 'SurveyController@showreport');
 Route::get('survey/reports', 'SurveyController@reportExcel');
 Route::get('survey/getObjective', 'SurveyController@getObjective');
 Route::get('survey/reportDownload', 'SurveyController@downloadReport');
+Route::get('survey/mhs', 'SurveyController@getSubject');
+Route::get('survey/insert', 'SurveyController@insert');
 
 Route::get('question/create/{id}', 'QuestionController@create');
 Route::post('question/create', 'QuestionController@store');

@@ -8,6 +8,7 @@
                 <th>Judul Survei</th>
                 <th>Survei</th>
                 <th>Jangka Waktu</th>
+                <th>Status</th> 
                 <th>Aksi</th>
             </tr>
             </thead>

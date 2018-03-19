@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Auth;
 use View;
 use DB;
+use parinpan\fanjwt\libs\JWTAuth;
 
 class UserController extends MainController {
     public function __construct()
@@ -87,8 +88,12 @@ class UserController extends MainController {
             $user = new User();
             $user->username = $login->payload->identity;
             $user->user_id = $login->payload->user_id;
+            $user->full_name = $login->payload->name;
+            $user->status = $login->payload->logged_in_as;
+            $user->photo = $login->payload->user_unit->photo;
+            $user->work_unit = $login->payload->user_unit->code;
             Auth::login($user);
-
+            
             $this->setUserInfo();
             $page_title = 'Daftar Survey';
 
@@ -106,12 +111,25 @@ class UserController extends MainController {
         $simsdm = new Simsdm();
         $units = $simsdm->unitAll();
 
+        $user_auth = UserAuth::where('username',$this->user_info['username'])->get();
+
+        $auth = null;
+
+        if($user_auth->contains('auth_type','SSU')){
+            $auth = 'SU';
+        }elseif($user_auth->contains('auth_type','OPU')){
+            $auth = 'OPU';
+        }elseif($user_auth->contains('auth_type','OPF')){
+            $auth = 'OPF';
+        }
+
         return view('user.user-detail', compact(
             'page_title',
             'auths',
             'upd_mode',
             'action_url',
-            'units'
+            'units',
+            'auth'
         ));
     }
 
@@ -175,7 +193,7 @@ class UserController extends MainController {
         {
             $data['data'][$i][0] = $i + 1;
             $data['data'][$i][1] = $user->username;
-            $data['data'][$i][2] = $simsdm->getEmployee($user->username)->full_name;
+            $data['data'][$i][2] = $simsdm->searchEmployee($user->username,1)->data[0]->full_name;
             $data['data'][$i][3] = $user->auths()->first()->description;
             $i++;
         }
@@ -227,9 +245,21 @@ class UserController extends MainController {
         $units = $simsdm->unitAll();
 
         $user_auth = UserAuth::where('username', $input)->first();
-        $user_auth->username_display = $user_auth->username;
-        $employee = $simsdm->getEmployee($user_auth->username);
+        $employee = $simsdm->searchEmployee($user_auth->username,1)->data[0];
         $user_auth->full_name = $employee->full_name;
+        // $user_auth->username_display = "NIP: ".$employee->nip.", NIDN: ".$employee->nidn.", Nama: ".$employee->full_name;
+        $user_auth->username_display = $input;
+        $user_authent = UserAuth::where('username',$this->user_info['username'])->get();
+
+        $auth = null;
+
+        if($user_authent->contains('auth_type','SSU')){
+            $auth = 'SU';
+        }elseif($user_authent->contains('auth_type','OPU')){
+            $auth = 'OPU';
+        }elseif($user_authent->contains('auth_type','OPF')){
+            $auth = 'OPF';
+        }
 
         return view('user.user-detail', compact(
             'page_title',
@@ -238,7 +268,8 @@ class UserController extends MainController {
             'action_url',
             'units',
             'user_auths',
-            'user_auth'
+            'user_auth',
+            'auth'
         ));
     }
 

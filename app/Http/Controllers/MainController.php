@@ -163,7 +163,6 @@ class MainController extends Controller
                     'type' => ""
                 ];
             }
-//            dd($this->user_info);
         }
         View::share('user_info', $this->user_info);
     }

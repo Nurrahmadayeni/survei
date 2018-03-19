@@ -2,7 +2,9 @@
 
 @php
     $olds = session()->getOldInput();
-
+    if(!isset($deadline)){
+        $deadline = null;
+    }
 @endphp
 
 @section('content')
@@ -28,7 +30,12 @@
                     <div class="panel rounded shadow">
                         <div class="panel-heading">
                             <div class="pull-left">
-                                <h3 class="panel-title">{{$page_title}} @if(!empty($disabled)) <span class="text-danger"> <i>( survei telah diisi )</i></span> @endif</h3>
+                                <h3 class="panel-title">{{$page_title}}
+                                    @if(!$answers->isEmpty() && $disabled != null) <span class="text-danger"> <i>* survei telah diisi </i></span> @endif
+                                    @if($answers->isEmpty() && $deadline)
+                                        <span class="text-danger"><i><b> * Waktu pengisian survei telah berakhir </b></i></span>
+                                    @endif
+                                </h3>
                             </div>
                             <div class="pull-right">
                                 <button class="btn btn-sm" data-action="collapse" data-container="body"
@@ -44,15 +51,36 @@
                                 $link_array = explode('/',$url);
                                 $page = end($link_array); 
                             @endphp
+
                             @if($page=='3' || $page=='4' || $page=='5' || $page=='6')
                                 <div class="panel">
                                     <span class="text-danger"><i><b>Keterangan : <br/>1. Tidak Puas / Not Satisfied at All; 2. Kurang Puas / Not Very Satisfied; 3.Netral / Neutral;        
                                     4.Puas / Satisfied; 5. Sangat Puas / Very Satisfied</b></i></span>
                                 </div>
                             @endif
+
                             @if($disabled == null)
                            {{-- action="{{url("survey/answer")}}" --}}
                                 <form id="form_question" method="post" enctype="multipart/form-data">
+                                    @if(!empty($subjects))
+                                    <div id="unit" class="form-group">
+                                        <label for="unit" class="control-label">Pilih Matakuliah</label>
+                                        <select class="form-control mb-15 chosen-select input-lg" name='subject_id' id="subject" data-placeholder="-- Pilih Matakuliah --" required>
+                                            <option value="" disabled="">-- Pilih Matakuliah --</option>
+                                            @foreach($subjects as $subject)
+                                                @if(!empty($subject->kodemk))
+                                                    @if($subject->enable=="no")
+                                                        <option value="{{$subject->kodemk}}">{{$subject->namamk}} <b> *telah dijawab </b></option>
+                                                    @else
+                                                        <option value="{{$subject->kodemk}}">{{$subject->namamk}}</option>
+                                                    @endif
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    @endif
+                                    <div id="answerShow"></div>
+                                    <fieldset id="question">
                                     @php $no=1; @endphp
                                     @foreach($questions as $question)
                                         <div class='panel rounded shadow panel-theme' style="margin-bottom: 2%">
@@ -60,8 +88,8 @@
                                                 {{$no}}. {{$question->question }}
                                             </div>
                                             <div class='panel-body' style='background-color:#F4F4F4'>
-                                                <input type='hidden' name='survey_id' value='{{$question->survey_id}}'>
                                                 {{csrf_field()}}
+                                                <input type='hidden' name='survey_id' value='{{$question->survey_id}}'>
                                                 <input type='hidden' name='qst_id[]' value='{{$question->id}}'>
                                                 <input type='hidden' name='answer_type[]' value='{{$question->answer_type}}'>
 
@@ -106,9 +134,74 @@
                                             </div>
                                         </div>
                                     </div>
+                                    </fieldset>
+                                </form>
+                            @elseif($answers->isEmpty() && $deadline)
+                                <form>
+                                    <fieldset disabled>
+                                    @php $no=1; @endphp
+                                    @foreach($questions as $question)
+                                        <div class='panel rounded shadow panel-theme' style="margin-bottom: 2%">
+                                            <div class='panel-heading rounded' style="padding: 1%">
+                                                {{$no}}. {{$question->question }}
+                                            </div>
+                                            <div class='panel-body' style='background-color:#F4F4F4'>
+                                                <input type='hidden' name='survey_id' value='{{$question->survey_id}}'>
+                                                {{csrf_field()}}
+                                                <input type='hidden' name='qst_id[]' value='{{$question->id}}'>
+                                                <input type='hidden' name='answer_type[]' value='{{$question->answer_type}}'>
+
+                                                @if($question->answer_type=='1')
+                                                    @php $val = explode(', ', $question->choices); @endphp
+                                                    @for($i=0; $i<=count($val)-1; $i++)
+                                                        <div class='rdio radio-inline rdio-theme rounded'>
+                                                            <input class='radio-inline' id='answerR{{$no}}{{$i}}' required type='radio' name='answer[{{$question->id}}]' value='{{$val[$i]}}'>
+                                                            <label for='answerR{{$no}}{{$i}}'>{{$val[$i]}}</label>
+                                                        </div>
+                                                    @endfor
+                                                @elseif($question->answer_type=='2')
+                                                    @php $val = explode(', ', $question->choices); @endphp
+                                                    @for($i=0; $i<=count($val)-1; $i++)
+                                                        <div class='ckbox ckbox-theme'>
+                                                            <input id='answerC{{$no}}{{$i}}' class='sampel' type='checkbox' name='chosen[{{$question->id}}][]' value='{{$val[$i]}}'>
+                                                            <label for='answerC{{$no}}{{$i}}' class='control-label'>{{$val[$i]}}</label>
+                                                        </div>
+                                                    @endfor
+                                                @elseif($question->answer_type=='3')
+                                                    <input type='number' class='number form-control' name='answer[{{$question->id}}]' placeholder='input angka' required>
+                                                @elseif($question->answer_type=='4')
+                                                    <textarea class='form-control' rows='3' name='answer[{{$question->id}}]' required></textarea>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        @php $no++; @endphp
+                                    @endforeach
+                                    </fieldset>
                                 </form>
                             @else
+                                
+                                @if(!empty($subjects))
+                                    <div id="unit" class="form-group">
+                                        <label for="unit" class="control-label">Pilih Matakuliah2</label>
+                                        <select class="form-control mb-15 chosen-select input-lg" name='subject_id' id="subject" data-placeholder="-- Pilih Matakuliah --" required>
+                                            <option value="" disabled="">-- Pilih Matakuliah --</option>
+                                            @foreach($subjects as $subject)
+                                                @if(!empty($subject->kodemk))
+                                                    @if($subject->enable=="no")
+                                                        <option value="{{$subject->kodemk}}">{{$subject->namamk}} <b> *telah dijawab </b></option>
+                                                    @else
+                                                        <option value="{{$subject->kodemk}}">{{$subject->namamk}}</option>
+                                                    @endif
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                @endif
                                 @php $no=1; @endphp
+
+                                <div id="answerShow"></div>
+                                <fieldset id="question">
 
                                 @foreach($answers as $answer)
                                     <div class='panel rounded shadow panel-theme' style="margin-bottom: 2%">
@@ -116,7 +209,10 @@
                                             {{$no}}. {{$answer->question['question'] }}
                                         </div>
                                         <div class='panel-body' style='background-color:#F4F4F4'>
-                                            {{csrf_field()}}
+                                            <input type='hidden' name='survey_id' value='{{$answer->survey_id}}'>
+                                                {{csrf_field()}}
+                                            <input type='hidden' name='qst_id[]' value='{{$answer->question_id}}'>
+                                            <input type='hidden' name='answer_type[]' value='{{$answer->answer_type}}'>
                                             @if($answer->answer_type=='1')
                                                 @php $val = explode(', ', $answer->question['choices']); @endphp
                                                 @for($i=0; $i<=count($val)-1; $i++)
@@ -143,6 +239,7 @@
                                     <hr>
                                     @php $no++; @endphp
                                 @endforeach
+                            </fieldset>
                             @endif
 
                         </div><!-- /.panel -->

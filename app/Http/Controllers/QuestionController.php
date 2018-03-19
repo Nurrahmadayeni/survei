@@ -55,8 +55,6 @@ class QuestionController extends MainController
             $login->payload = new \stdClass();
             $login->payload->identity = env('USERNAME_LOGIN');
             $login->payload->user_id = env('ID_LOGIN');
-//            $login->payload->identity = env('LOGIN_USERNAME');
-//            $login->payload->user_id = env('LOGIN_ID');
 
         } else
         {
@@ -251,7 +249,9 @@ class QuestionController extends MainController
 
     public function getAjax()
     {
+        // dd(Input::get());
         $id = Input::get('id');
+        $obj = Input::get('obj');
         $questions = Question::where('survey_id', $id)->get();
 
         $data = [];
@@ -264,9 +264,9 @@ class QuestionController extends MainController
             $data['data'][$i][1] = $question->question;
             $data['data'][$i][2] = $answerType->type;
             $data['data'][$i][3] = $question->choices;
-            $data['data'][$i][4] = '<a data-id1="'.$question->id.'" class="btn btn-theme btn-sm rounded diagram" data-toggle="tooltip" data-placement="top" title="Lihat Diagram"><i class="fa fa-eye" style="color:white;"></i></a>';
-            $data['data'][$i][5] = '<a data-id1="'.$question->id.'" data-id2="'.$question->question.'" class="btn btn-theme btn-sm rounded edit" data-toggle="tooltip" data-placement="top" title="Edit"><i class="fa fa-pencil" style="color:white;"></i></a>';
-            $data['data'][$i][5].= '<a data-toggle="tooltip" data-placement="top" title="Delete"><button class="btn btn-danger btn-sm rounded delete" data-id="'.$question->id.'" data-toggle="modal" data-target="#delete"><i class="fa fa-times"></i></button></a>';
+            // $data['data'][$i][4] = '<a data-id1="'.$id.'" data-id2="'.$question->id.'" data-id3="'.$obj.'" class="btn btn-theme btn-sm rounded diagram" data-toggle="tooltip" data-placement="top" title="Lihat Diagram"><i class="fa fa-eye" style="color:white;"></i></a>';
+            $data['data'][$i][4] = '<a data-id1="'.$question->id.'" data-id2="'.$question->question.'" class="btn btn-theme btn-sm rounded edit" data-toggle="tooltip" data-placement="top" title="Edit"><i class="fa fa-pencil" style="color:white;"></i></a>';
+            $data['data'][$i][4].= '<a data-toggle="tooltip" data-placement="top" title="Delete"><button class="btn btn-danger btn-sm rounded delete" data-id="'.$question->id.'" data-toggle="modal" data-target="#delete"><i class="fa fa-times"></i></button></a>';
                 $i++;
         }
 

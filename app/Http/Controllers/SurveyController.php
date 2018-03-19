@@ -12,10 +12,12 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Input;
 use App\Http\Requests\StoreSurveyRequest;
 use App\Simsdm;
+use App\Sia;
 use App\User;
 use App\UserAuth;
 use View;
 use Excel;
+use PDF;
 use parinpan\fanjwt\libs\JWTAuth;
 
 class SurveyController extends MainController
@@ -37,8 +39,10 @@ class SurveyController extends MainController
         array_push($this->css['pages'], 'global/plugins/bower_components/datatables/dataTables.bootstrap.css');
         array_push($this->css['pages'], 'global/plugins/bower_components/datatables/datatables.responsive.css');
         array_push($this->css['pages'], 'global/plugins/bower_components/select2/select2.min.css');
+        array_push($this->css['pages'], 'global/plugins/bower_components/chosen_v1.2.0/chosen.min.css');
 
         array_push($this->js['plugins'], 'global/plugins/bower_components/datatables/jquery.dataTables.min.js');
+         array_push($this->js['plugins'], 'global/plugins/bower_components/chosen_v1.2.0/chosen.jquery.min.js');
         array_push($this->js['plugins'], 'global/plugins/bower_components/select2/select2.full.min.js');
         array_push($this->js['plugins'], 'global/plugins/bower_components/jquery-ui/jquery-ui.js');
 
@@ -60,17 +64,17 @@ class SurveyController extends MainController
             $login->logged_in = true;
             $login->payload = new \stdClass();
             $login->payload->user_unit = new \stdClass();
-            $login->payload->identity = env('USERNAME_LOGIN');
-            $login->payload->user_id = env('ID_LOGIN');
+//             $login->payload->identity = env('USERNAME_LOGIN');
+//             $login->payload->user_id = env('ID_LOGIN');
 
-//            $login->payload->identity = env('LOGIN_USERNAME');
-//            $login->payload->user_id = env('LOGIN_ID');
+// //            $login->payload->identity = env('LOGIN_USERNAME');
+// //            $login->payload->user_id = env('LOGIN_ID');
 
-            $user = $simsdm->getEmployee(env('USERNAME_LOGIN'));
-            $login->payload->name = $user->full_name;
-            $login->payload->logged_in_as = 1;
-            $login->payload->user_unit->photo = $user->photo;
-            $login->payload->user_unit->code = $user->work_unit;
+//             $user = $simsdm->getEmployee(env('USERNAME_LOGIN'));
+//             $login->payload->name = $user->full_name;
+//             $login->payload->logged_in_as = 1;
+//             $login->payload->user_unit->photo = $user->photo;
+//             $login->payload->user_unit->code = $user->work_unit;
         } else
         {
             $login = JWTAuth::communicate('https://akun.usu.ac.id/auth/listen', @$_COOKIE['ssotok'], function ($credential)
@@ -109,13 +113,14 @@ class SurveyController extends MainController
             Auth::login($user);
 
             $this->setUserInfo();
+            
             $page_title = 'Daftar Survei';
 
             $user_auth = UserAuth::where('username',$this->user_info['username'])->get();
 
             $auths = null;
 
-            if($user_auth->contains('auth_type','SU')){
+            if($user_auth->contains('auth_type','SU') || $user_auth->contains('auth_type','SSU')){
                 $auths = 'SU';
             }elseif($user_auth->contains('auth_type','OPU')){
                 $auths = 'OPU';
@@ -125,6 +130,16 @@ class SurveyController extends MainController
 
             return view('survey.survey-list', compact('page_title', 'auths'));
         }
+    }
+
+    public function listAdmin(){
+        $page_title = 'Daftar Survei Admin';
+
+        $user_auth = UserAuth::where('username',$this->user_info['username'])->get();
+
+        $auths = "admin";
+
+        return view('survey.survey-list', compact('page_title', 'auths'));
     }
 
     public function create()
@@ -150,7 +165,7 @@ class SurveyController extends MainController
         $user_auth = UserAuth::where('username',$this->user_info['username'])->get();
         $auth = null;
 
-        if($user_auth->contains('auth_type','SU')){
+        if($user_auth->contains('auth_type','SU') || $user_auth->contains('auth_type','SSU')){
             $auth = 'SU';
         }elseif($user_auth->contains('auth_type','OPU')){
             $auth = 'OPU';
@@ -161,7 +176,7 @@ class SurveyController extends MainController
         $simsdm = new Simsdm();
         $units = [];
 
-        if($user_auth->contains('auth_type','SU')){
+        if($user_auth->contains('auth_type','SU') || $user_auth->contains('auth_type','SSU')){
             $units = $simsdm->unitAll();
             $usu = array("id"=>"","code"=>"USU","name"=>"Universitas Sumatera Utara");
             array_push($units,$usu);
@@ -178,6 +193,12 @@ class SurveyController extends MainController
             }
         }
 
+        $academic_years = new Collection();
+        $start    = '2012-12-02';
+        $end      = date("Y-m-d");
+        $academic_years  = range(gmdate('Y', strtotime($start)), gmdate('Y', strtotime($end)));
+        $academic_years = array_reverse($academic_years);
+
         return view('survey.survey-detail', compact(
             'upd_mode',
             'action_url',
@@ -186,7 +207,8 @@ class SurveyController extends MainController
             'auth',
             'survey',
             'units',
-            'unit_user'
+            'unit_user',
+            'academic_years'
         ));
     }
 
@@ -206,6 +228,8 @@ class SurveyController extends MainController
                 $survey->$value = '1';
             }
         }else{
+            $survey->academic_year = Input::get('academic_year');
+            $survey->semester = Input::get('semester');
             $survey->student = '1';
         }
 
@@ -282,7 +306,7 @@ class SurveyController extends MainController
         $user_auth = UserAuth::where('username',$this->user_info['username'])->get();
         $auth = null;
 
-        if($user_auth->contains('auth_type','SU')){
+        if($user_auth->contains('auth_type','SU') || $user_auth->contains('auth_type','SSU')){
             $auth = 'SU';
         }elseif($user_auth->contains('auth_type','OPU')){
             $auth = 'OPU';
@@ -293,8 +317,10 @@ class SurveyController extends MainController
         $simsdm = new Simsdm();
         $units = [];
 
-        if($user_auth->contains('auth_type','SU')){
+        if($user_auth->contains('auth_type','SU') || $user_auth->contains('auth_type','SSU')){
             $units = $simsdm->unitAll();
+            $usu = array("id"=>"","code"=>"USU","name"=>"Universitas Sumatera Utara");
+            array_push($units,$usu);
         }else{
             foreach ($user_auth as $user){
                 $list_units = $simsdm->unitAll();
@@ -308,6 +334,12 @@ class SurveyController extends MainController
             }
         }
 
+        $academic_years = new Collection();
+        $start    = '2012-12-02';
+        $end      = date("Y-m-d");
+        $academic_years  = range(gmdate('Y', strtotime($start)), gmdate('Y', strtotime($end)));
+        $academic_years = array_reverse($academic_years);
+
         return view('survey.survey-detail', compact(
             'upd_mode',
             'action_url',
@@ -317,7 +349,8 @@ class SurveyController extends MainController
             'survey',
             'survey_objs',
             'units',
-            'unit_user'
+            'unit_user',
+            'academic_years'
         ));
     }
 
@@ -364,7 +397,7 @@ class SurveyController extends MainController
         $user_auth = UserAuth::where('username',$this->user_info['username'])->get();
         $auth = null;
 
-        if($user_auth->contains('auth_type','SU')){
+        if($user_auth->contains('auth_type','SU') || $user_auth->contains('auth_type','SSU')){
             $auth = 'SU';
         }elseif($user_auth->contains('auth_type','OPU')){
             $auth = 'OPU';
@@ -375,7 +408,7 @@ class SurveyController extends MainController
         $simsdm = new Simsdm();
         $units = [];
 
-        if($user_auth->contains('auth_type','SU')){
+        if($user_auth->contains('auth_type','SU') || $user_auth->contains('auth_type','SSU')){
             $units = $simsdm->unitAll();
             $usu = array("id"=>"","code"=>"USU","name"=>"Universitas Sumatera Utara");
             array_push($units,$usu);
@@ -392,6 +425,12 @@ class SurveyController extends MainController
             }
         }
 
+        $academic_years = new Collection();
+        $start    = '2012-12-02';
+        $end      = date("Y-m-d");
+        $academic_years  = range(gmdate('Y', strtotime($start)), gmdate('Y', strtotime($end)));
+        $academic_years = array_reverse($academic_years);
+
         return view('survey.survey-detail', compact(
             'upd_mode',
             'action_url',
@@ -401,7 +440,8 @@ class SurveyController extends MainController
             'survey',
             'survey_objs',
             'units',
-            'unit_user'
+            'unit_user',
+            'academic_years'
         ));
     }
 
@@ -475,6 +515,12 @@ class SurveyController extends MainController
 
     public function answer($id)
     {
+        $sia = new Sia();
+        $simsdm = new Simsdm();
+        $survey = Survey::find($id);
+        if(empty($survey)){
+            return abort('404');
+        }
         array_push($this->js['scripts'], 'global/plugins/bower_components/jquery-validation/dist/jquery.validate.min.js');
         array_push($this->js['plugins'], 'global/plugins/bower_components/jquery-ui/jquery-ui.js');
         array_push($this->js['plugins'], 'js/loadingoverlay_progress.min.js');
@@ -488,11 +534,56 @@ class SurveyController extends MainController
         $page_title = 'Jawab Survei';
         $disabled = '';
 
-        $questions = Question::where('survey_id',$id)->get();
+        $questions = $survey->question()->get();
+
+        $units = $simsdm->unitAll();
+
         $answers = UserAnswer::with('question')->where('survey_id',$id)->where('username',$this->user_info['username'])->get();
 
         if(!$answers->isEmpty()){
             $disabled = 'disabled';
+        }
+
+        $date = date('Y-m-d');
+        if($date > $survey->end_date){
+            $disabled = 'disabled';
+            $deadline = true;
+        }
+
+        $subjects = [];
+
+        if($survey->is_subject==1){
+            $units = $simsdm->unitAll();
+            foreach ($units as $unit){
+                if($this->user_info['work_unit']==$unit['code']){
+                    $unit_id = $unit['id'];
+                }
+            }
+
+            $subjects = $sia->getSubject($unit_id,$this->user_info['username'])->MATAKULIAH;
+            $semaktif = $survey->academic_year."".$survey->semester;
+
+            foreach ($subjects as $key=>$subject){
+                if ($subject->semester != $semaktif){
+                    unset($subjects[$key]);
+                }
+
+                if($subject->semester == $semaktif){
+                    $user_answers = $survey->userAnswer()->where('username',$this->user_info['username'])->
+                    where('subject_id',$subject->kodemk)->first();
+
+                    if(empty($user_answers)){
+                        $subject->enable = "yes";
+                    }else{
+                        $subject->enable = "no";
+                        $answers = UserAnswer::with('question')->where('survey_id',$id)->where('username',$this->user_info['username'])->where('subject_id',$subject->kodemk)->get();
+                    }
+
+                    if(empty($user_answers)){
+                        $disabled = '';
+                    }
+                }
+            }
         }
 
         return view('survey.survey-answer', compact(
@@ -501,18 +592,29 @@ class SurveyController extends MainController
             'page_title',
             'disabled',
             'questions',
-            'answers'
+            'answers',
+            'deadline',
+            'subjects'
         ));
     }
 
     public function answerStore()
     {
         $data = Input::get('chosen');
-        $answer_exist = UserAnswer::where('survey_id',Input::get('survey_id'))->where('username',$this->user_info['username'])->first();
+        $subject_id = Input::get('subject_id');
 
-        if(!empty($answer_exist)){
-        	return ('exist');
+        if(!empty(Input::get('subject_id'))){
+            $answer_exist = UserAnswer::where('survey_id',Input::get('survey_id'))->where('username',$this->user_info['username'])->where('subject_id',Input::get('subject_id'))->first();    
+            if(!empty($answer_exist)){
+                return ('exist');
+            }
+        }else{
+            $answer_exist = UserAnswer::where('survey_id',Input::get('survey_id'))->where('username',$this->user_info['username'])->first();
+            if(!empty($answer_exist)){
+                return ('exist');
+            }
         }
+        
 
         $survey = Survey::find(Input::get('survey_id'));
         $question = $survey->question()->get();
@@ -529,17 +631,22 @@ class SurveyController extends MainController
             $user_answer->username = $this->user_info['username'];
             $user_answer->question_id = $value;
             $user_answer->answer_type = $type;
-            $user_answer->subject_id = "";
+
+            if(!empty(Input::get('subject_id'))){
+                $user_answer->subject_id = Input::get('subject_id');
+            }else{
+                $user_answer->subject_id = Input::get('subject_id');
+            }
 
             $type = $this->user_info['type'];
 
-	        if($type=='0' || $type=='2' || $type=='3' || $type=='4'){
-	            $user_answer->level= 'lecture';
-	        }else if($type=='1' || $type=='5'){
-	            $user_answer->level= 'employee';
-	        }else{
-	            $user_answer->level= 'student';
-	        }
+            if($type=='0' || $type=='2' || $type=='3' || $type=='4'){
+                $user_answer->level= 'lecture';
+            }else if($type=='1' || $type=='5'){
+                $user_answer->level= 'employee';
+            }else{
+                $user_answer->level= 'student';
+            }
 
 
             $user_answer->unit = $this->user_info['work_unit'];
@@ -568,14 +675,80 @@ class SurveyController extends MainController
         }
 
         if($user_answers->count() < $question->count()){
-        	return ('min');
+            return ('min');
         }elseif($user_answers->count() > $question->count()){
-        	return ('max');
+            return ('max');
         }elseif($user_answers->count() == $question->count()){
-        	if(isset($user_answers)){
-	            $survey->userAnswer()->saveMany($user_answers);
-	        }
-	        return ("success");
+            if(isset($user_answers)){
+                $survey->userAnswer()->saveMany($user_answers);
+            }
+            return ("success");
+        }
+    }
+
+    public function showAnswer(){
+        $subject_id = Input::get('subject_id');
+        $survey_id = Input::get('survey_id');
+
+        $answers = UserAnswer::with('question')->where('survey_id',$survey_id)->where('username',$this->user_info['username'])->where('subject_id',$subject_id)->get();
+        if($answers->isEmpty()){
+            echo "null";
+        }else{
+            $no=1;
+            foreach($answers as $answer){
+                $question = $answer->question['question'];
+                $choices = $answer->question['choices'];
+                $jawaban = $answer->answer;
+                echo "
+                    <div class='panel rounded shadow panel-theme' style='margin-bottom: 2%'>
+                        <div class='panel-heading rounded' style='padding: 1%'>
+                            $no. $question
+                        </div>
+                        <div class='panel-body' style='background-color:#F4F4F4'>";
+                        if($answer->answer_type=='1'){
+                            $val = explode(', ', $choices);
+                
+                            for($i=0; $i<=count($val)-1; $i++){
+                                if($val[$i] == $answer->answer){
+                                    $checked = 'checked';
+                                }else{
+                                    $checked = '';
+                                }
+
+                                echo "
+                                <div class='rdio radio-inline rdio-theme rounded'>
+                                    <input class='radio-inline' id='answerR$no$i' type='radio' value='$val[$i]' $checked disabled>
+                                    <label for='answerR$no$i'>$val[$i]</label>
+                                </div>";
+                            }
+                        } else if($answer->answer_type=='2'){
+
+                            $val = explode(', ', $choices);
+                            for($i=0; $i<=count($val)-1; $i++){
+                                if(strpos( $answer->answer, $val[$i] ) !== false){
+                                    $checked = 'checked'; 
+                                }else{
+                                    $checked = '';
+                                }
+
+                                echo "
+                                <div class='ckbox ckbox-theme'>
+                                    <input id='answerC$no$i' class='sampel' type='checkbox' value='$val[$i]' $checked disabled>
+                                    <label for='answerC$no$i' class='control-label'>$val[$i]</label>
+                                </div> ";
+                            }
+
+                        } else if($answer->answer_type=='3'){
+                            echo "<input type='number' class='number form-control' value='$jawaban' disabled>";
+                        }else{
+                            echo "
+                            <textarea class='form-control' rows='3' $disabled>$jawaban</textarea>
+                            ";
+                        }
+                        echo "</div></div><hr>";
+                    
+                $no++; 
+            }
         }
     }
 
@@ -603,7 +776,7 @@ class SurveyController extends MainController
         $user_auth = UserAuth::where('username',$this->user_info['username'])->get();
         $auth = null;
 
-        if($user_auth->contains('auth_type','SU')){
+        if($user_auth->contains('auth_type','SU') || $user_auth->contains('auth_type','SSU')){
             $auth = 'SU';
         }elseif($user_auth->contains('auth_type','OPU')){
             $auth = 'OPU';
@@ -614,7 +787,7 @@ class SurveyController extends MainController
         $simsdm = new Simsdm();
         $units = [];
 
-        if($user_auth->contains('auth_type','SU')){
+        if($user_auth->contains('auth_type','SU') || $user_auth->contains('auth_type','SSU')){
             $units = $simsdm->unitAll();
             $usu = array("id"=>"","code"=>"USU","name"=>"Universitas Sumatera Utara");
             array_push($units,$usu);
@@ -631,6 +804,12 @@ class SurveyController extends MainController
             }
         }
 
+        $academic_years = new Collection();
+        $start    = '2012-12-02';
+        $end      = date("Y-m-d");
+        $academic_years  = range(gmdate('Y', strtotime($start)), gmdate('Y', strtotime($end)));
+        $academic_years = array_reverse($academic_years);
+
         return view('survey.survey-detail', compact(
             'upd_mode',
             'action_url',
@@ -639,7 +818,8 @@ class SurveyController extends MainController
             'auth',
             'survey',
             'units',
-            'unit_user'
+            'unit_user',
+            'academic_years'
         ));
     }
 
@@ -649,7 +829,15 @@ class SurveyController extends MainController
         View::share('js', $this->js);
 
         $page_title = 'Laporan Survei';
-        $survey= Survey::all();
+        // $survey= Survey::all();
+        $user_auth = UserAuth::where('username',$this->user_info['username'])->first();
+
+        if($user_auth->auth_type == 'SU' || $user_auth->auth_type == 'SSU'){
+            $survey = Survey::all();
+        }else{
+            $survey = Survey::where('unit', $user_auth->unit)->get();
+        }
+
         return view('survey.survey-report', compact('page_title', 'survey'));
     }
 
@@ -682,17 +870,17 @@ class SurveyController extends MainController
 	        }
     	}
 
-        $all = array("id"=>"","code"=>"all","name"=>"Semua Unit");
+        $all = array("id"=>"usu","code"=>"usu","name"=>"Semua Unit");
         array_unshift($unit_lists,$all);
 
         $data = json_encode($unit_lists, JSON_PRETTY_PRINT);
 
         return response($data, 200)->header('Content-Type', 'application/json');
     }
-
+    
     public function showreport()
     {
-        if(Input::get('survey_obj')=='all'){
+        if(Input::get('survey_obj')=='usu'){
             $answer = UserAnswer::where('survey_id',Input::get('survey'))->first();
         }else{
             $answer = UserAnswer::where('survey_id',Input::get('survey'))->where('unit',Input::get('survey_obj'))->first();
@@ -706,6 +894,7 @@ class SurveyController extends MainController
     public function downloadReport()
     {
     	error_reporting(E_ALL);
+    	ini_set("max_execution_time",360);
 
         $data = [];
         $datum = [];
@@ -715,37 +904,48 @@ class SurveyController extends MainController
         $survey = Survey::find(Input::get('id1'));
         $list_units = $simsdm->unitAll();
 
-        
-        if(Input::get('id2')=='all'){
-            // $answers = UserAnswer::where('survey_id',Input::get('id1'))->orderBy('id')->skip(40500)->take(5400)->get();
-            $answers = new Collection();
 
-        	$objective = $survey->surveyObjective()->get();
-
-        	$x = 0;
-        	foreach ($objective as $obj) {
-        		$answers_temps = UserAnswer::where('survey_id',Input::get('id1'))->where('unit',$obj['objective'])->orderBy('username')->get();
-        		if(!$answers_temps->isEmpty()){
-        			foreach ($answers_temps as $answer) {
-	        			$answers->push($answer);	
-	        		}	
-        		}        		
-        	}
-            
-        }else{
-            $answers = UserAnswer::where('survey_id',Input::get('id1'))->where('unit',Input::get('id2'))->get();
-        }
-
-        
         if(Input::get('mode')==1){
+            if(Input::get('id2')=='usu'){
+                // $answers = UserAnswer::where('survey_id',Input::get('id1'))->orderBy('id')->skip(40500)->take(5400)->get();
+                $answers = new Collection();
+
+                $objective = $survey->surveyObjective()->get();
+
+                $x = 0;
+                foreach ($objective as $obj) {
+                    $answers_temps = UserAnswer::where('survey_id',Input::get('id1'))->where('unit',$obj['objective'])->orderBy('username')->get();
+                    if(!$answers_temps->isEmpty()){
+                        foreach ($answers_temps as $answer) {
+                            $answers->push($answer);    
+                        }   
+                    }               
+                }
+            
+            }else{
+                $answers = UserAnswer::where('survey_id',Input::get('id1'))->where('unit',Input::get('id2'))->get();
+            }
+
             $prevIdent = null;
             $y = null;
-
+            
             foreach($answers as $answer){
                 foreach ($list_units as $key=>$unit){
                     if (is_array($list_units) && in_array($answer->unit, $unit)){
                         $answer->unit = $unit['name'];
                     }
+                }
+
+                if($answer->answer==1){
+                    $answer->answer = "Tidak Puas";
+                }elseif($answer->answer==2){
+                    $answer->answer = "Kurang Puas";
+                }elseif($answer->answer==3){
+                    $answer->answer = "Biasa Saja";
+                }elseif($answer->answer==4){
+                    $answer->answer = "Puas";
+                }elseif($answer->answer==5){
+                    $answer->answer = "Sangat Puas";
                 }
 
                 if($answer->username==null){
@@ -755,12 +955,14 @@ class SurveyController extends MainController
                     $data[$i]['Identitas'] =  $answer->username;
                     $data[$i]['Unit'] = $answer->unit;
                     $data[$i]['Level'] = $answer->level;
-                    $data[$y]['qst'][] = $answer->answer;
+                    $data[$y]['qst'][] = Question::find($answer->question_id)->question;
+                    $data[$y]['answ'][] = $answer->answer;
                 }
 
                 if($answer->username==$prevIdent){    
                     
-                    $data[$y]['qst'][] = $answer->answer;
+                    $data[$y]['answ'][] = $answer->answer;
+                    $data[$y]['qst'][] = Question::find($answer->question_id)->question;
                 }
 
 
@@ -770,68 +972,141 @@ class SurveyController extends MainController
                     $data[$i]['Identitas'] =  $answer->username;
                     $data[$i]['Unit'] = $answer->unit;
                     $data[$i]['Level'] = $answer->level;
-                    $data[$i]['qst'][] = $answer->answer;
+                    // $data[$i]['qst_id'] = $answer->question_id;
+                    $data[$i]['answ'][] = $answer->answer;
+                    $data[$i]['qst'][] = Question::find($answer->question_id)->question;
+
                     $y = $i;
                 }
 
                 $i++;
             }
-
+            // dd($data);
             $j = 0;
             foreach ($data as $dataa){
                 $datum[$j]['No'] = $j + 1;
                 $datum[$j]['Identitas'] = $dataa['Identitas'];
                 $datum[$j]['Unit'] = $dataa['Unit'];
                 $datum[$j]['Level'] = $dataa['Level'];
-
                 $k=1;
-                foreach ($dataa['qst'] as $qst){
-                    $datum[$j]['Q'.$k] = $qst;
-                    $k++;
+
+
+                foreach ($dataa['qst'] as $key => $qst) {
+                    $datum[$j][$qst] = $dataa['answ'][$key];
                 }
                 $j++;
             }
 
+            return Excel::create('Report '.$survey->title, function($excel) use ($datum, $survey) {
 
-            return Excel::create('Laporan Survei', function($excel) use ($datum, $survey) {
+                // Set the title
+	            $excel->setTitle('Laporan Survei');
 
-                $excel->sheet('mySheet', function($sheet) use ($datum, $survey)
-                {
-                    $sheet->row(1, array($survey->title));
-                    $sheet->mergeCells('A1:AE1');
-                    $sheet->row(1, function ($row) {
-                        $row->setFontSize(14);
-                        $row->setAlignment('center');
-                    });
+	            // Chain the setters
+	            $excel->setCreator('PSI')
+	                ->setCompany('PSI');
 
-                    $sheet->appendRow(array_keys($datum[0]));
-                    $sheet->cell('A:B', function($cell) {
-                        $cell->setAlignment('center');
-                    });
+	            // Call them separately
+	            $excel->setDescription('Laporan '.$survey->title);
 
-                    foreach ($datum as $survei) {
-                        $sheet->appendRow($survei);
-                    }
-                });
+	            $excel->sheet('Laporan', function ($sheet) use ($datum)
+	            {
+	                $sheet->fromArray($datum, null, 'A1', true);
+	            });
             })->download('xls');
 
-        }else{
-            return abort('404');
+        }
+
+        if(Input::get('mode')==2){
+            $data = [];
+            $i = 0;
+            $survey_id = Input::get('id1');
+
+            $unit = Input::get('id2');
+
+            $survey = Survey::find($survey_id);
+            
+            if (empty($survey))
+            {
+                return abort('404');
+            }
+            $questions = $survey->question()->get();
+            if (empty($questions))
+            {
+                return abort('404');
+            }
+
+            if($unit=='usu'){
+                $sample_total = $survey->userAnswer()->groupBy('username')->get()->count();
+            }else{
+               $sample_total = $survey->userAnswer()->groupBy('username')->where('unit',$unit)->get()->count();
+            }
+
+            foreach ($questions as $question) {
+                $choices = explode(', ', $question->choices);
+                $data[$i]['question'] = $question->question;
+                $j = 0;
+                // $l = 0;
+                for($q=0; $q<=count($choices)-1; $q++){
+                    if($unit=='usu'){
+                        $count = $question->userAnswer()->groupBy('username')->where('answer',$choices[$q])->get()->count();
+                    }else{
+                        $count = $question->userAnswer()->groupBy('username')->where('answer',$choices[$q])->where('unit',$unit)->get()->count();
+                    }
+
+                    $percentage = floatval(number_format((($count/$sample_total)*100),2));
+                    if($choices[$q]==1){
+                        $choices[$q] = "Tidak Puas";
+                    }elseif($choices[$q]==2){
+                        $choices[$q] = "Kurang Puas";
+                    }elseif($choices[$q]==3){
+                        $choices[$q] = "Biasa Saja";
+                    }elseif($choices[$q]==4){
+                        $choices[$q] = "Puas";
+                    }elseif($choices[$q]==5){
+                        $choices[$q] = "Sangat Puas";
+                    }
+                    $data[$i]['choices'][$j] = array($choices[$q], $percentage);
+                    $j++;
+                }
+                $i++;
+            }
+
+            $list_units = $simsdm->unitAll();
+            $usu = array("id"=>"","code"=>"usu","name"=>"Universitas Sumatera Utara");
+            array_push($list_units,$usu);
+
+            foreach ($list_units as $key=>$units){
+                if (is_array($list_units) && !in_array($unit, $units)){
+                    unset($list_units[$key]);
+                }else{
+                    $survey->unit = $units['name'];
+                }
+            }
+
+        	// $pdf = PDF::loadView('survey.survey-report-pdf', compact('survey','data'));
+            // return $pdf->download('Chart report survey.pdf');
+            return view('survey.survey-report-pdf', compact('survey','data','sample_total'));
         }
     }
 
     public function getAjax()
     {
         $user_auth = UserAuth::where('username',$this->user_info['username'])->first();
-
-        if($user_auth->auth_type == 'SU'){
+        
+        if($user_auth->auth_type == 'SU' || $user_auth->auth_type == 'SSU'){
             $surveys = Survey::all();
         }else{
-            $surveys = Survey::where('unit', $this->user_info['work_unit'])->get();
+            $surveys = Survey::where('unit', $user_auth->unit)->get();
         }
 
         $data = [];
         $simsdm = new Simsdm();
+
+        $list_units = $simsdm->unitAll();
+        $usu = array("id"=>"","code"=>"USU","name"=>"Universitas Sumatera Utara");
+        array_push($list_units,$usu);
+
 
         $i = 0;
         foreach ($surveys as $survey)
@@ -853,20 +1128,12 @@ class SurveyController extends MainController
 
             $count = $users = DB::table('user_answers')->select('username')->where('survey_id',$survey->id)->groupBy('username')->get();
             $count_sample = $count->count();
-            if($user_auth->auth_type == 'SU'){
-
-                $list_units = $simsdm->unitAll();
-                $usu = array("id"=>"","code"=>"USU","name"=>"Universitas Sumatera Utara");
-                array_push($list_units,$usu);
-
-                foreach ($list_units as $key=>$unit){
-                    if (is_array($list_units) && !in_array($survey->unit, $unit)){
-                        unset($list_units[$key]);
-                    }
-                }
-                foreach ($list_units as $unit){
-                    $survey->unit = $unit['name'];
-                }
+            if($user_auth->auth_type == 'SU' || $user_auth->auth_type == 'SSU'){
+               	foreach ($list_units as $key=>$unit){
+					if($unit['code']==$survey->unit){
+						$survey->unit = $unit['name'];
+					}
+				}
 
                 $data['data'][$i][3] = $survey->unit;
                 $data['data'][$i][4] = $survey->created_by;
@@ -900,6 +1167,7 @@ class SurveyController extends MainController
     {
         $data = [];
         $simsdm = new Simsdm();
+        $sia = new Sia();
         $i = 0;
 
         $type = $this->user_info['type'];
@@ -913,27 +1181,62 @@ class SurveyController extends MainController
             $surveys = Survey::whereHas('SurveyObjective', function($q) use($work_unit) { $q->where('objective',$work_unit);})->where('student', '1')->get();
         }
 
+        $list_units = $simsdm->unitAll();
+        $usu = array("id"=>"","code"=>"USU","name"=>"Universitas Sumatera Utara");
+        array_push($list_units,$usu);
+
         foreach ($surveys as $survey){
             $data['data'][$i][0] = $survey->id;
             $data['data'][$i][1] = $i + 1;
             $data['data'][$i][2] = $survey->title;
-
-            $list_units = $simsdm->unitAll();
-            $usu = array("id"=>"","code"=>"USU","name"=>"Universitas Sumatera Utara");
-            array_push($list_units,$usu);
-
-            foreach ($list_units as $key=>$unit){
-                if (is_array($list_units) && !in_array($survey->unit, $unit)){
-                    unset($list_units[$key]);
-                }
+            if($survey->is_subject == 1){
+                $data['data'][$i][2].= " <b> *Survei matakuliah </b>";
             }
 
             foreach ($list_units as $unit){
-                $survey->unit = $unit['name'];
+                if($survey->unit == $unit['code']){
+                    $survey->unit = $unit['name'];
+                }
             }
 
             $data['data'][$i][3] = $survey->unit;
             $data['data'][$i][4] = date('d M Y', strtotime($survey->start_date)). ' - '.date('d M Y', strtotime($survey->end_date));
+
+            
+            $status = $survey->userAnswer()->where('username',$this->user_info['username'])->first();
+            if(empty($status)){
+                $status = "Belum Mengisi Survei";
+            }else{
+                if($survey->is_subject == 0){
+                    $status = "Telah Mengisi Survei";
+                }else{
+                    $units = $simsdm->unitAll();
+                    foreach ($units as $unit){
+                        if($this->user_info['work_unit']==$unit['code']){
+                            $unit_id = $unit['id'];
+                        }
+                    }
+
+                    $subjects = $sia->getSubject($unit_id,$this->user_info['username'])->MATAKULIAH;
+                    $semaktif = $survey->academic_year."".$survey->semester;
+
+                    foreach ($subjects as $key=>$subject){
+                        if ($subject->semester == $semaktif){
+                            $user_answers = $survey->userAnswer()->where('username',$this->user_info['username'])->
+                            where('subject_id',$subject->kodemk)->first();
+
+                            if(empty($user_answers)){
+                                $status = "Anda belum menjawab sebagian survei matakuliah";
+                                break;
+                            }else{
+                                $status = "Telah Mengisi Survei";
+                            }
+                        }
+                    }
+                }
+            } 
+            
+            $data['data'][$i][5] = $status;
             $i++;
         }
 
@@ -1077,5 +1380,124 @@ class SurveyController extends MainController
 
             $i++;
         }
+    }
+
+    public function getDetail($user_id){
+        $this->client = new \GuzzleHttp\Client();
+        $response = $this->client->get('https://api.usu.ac.id/1.0/users/'.$user_id);
+        $employee = json_decode($response->getBody());
+
+        return $employee;
+    }
+
+    public function insert(){
+        $this->client = new \GuzzleHttp\Client();
+        $response = $this->client->get('https://api.usu.ac.id/0.1/units/20');
+
+        $employees = json_decode($response->getBody());
+        // dd($employees->data->officials);
+
+        $count = 0;
+        $delete = 0;
+        foreach ($employees->data->officials as $user) { 
+            $employee = $this->getDetail($user->user_id);
+            
+            if(isset($employee->nip)){
+                $answer = UserAnswer::where('username', $employee->nip)->where('unit', $employee->work_unit)->first();
+
+                    if(empty($answer)){
+                        echo $employee->nip."<br/>";
+                        $answer_user = new UserAnswer();
+                        $answer_user->username = $employee->nip;
+                        $answer_user->survey_id = 1;
+                        $answer_user->question_id = 1;
+                        $answer_user->answer_type = 1;
+                        $answer_user->subject_id = "";
+                        $answer_user->unit = $employee->work_unit;
+                        $answer_user->level = "leader";
+                        $answer_user->answer = "Pernah";
+                        $answer_user->created_at = "2018-01-25 22:42:57";
+                        $answer_user->updated_at = "2018-01-25 22:42:57";
+
+                        $answer_user->save();
+
+                        $answer_user = new UserAnswer();
+                        $answer_user->username = $employee->nip;
+                        $answer_user->survey_id = 1;
+                        $answer_user->question_id = 2;
+                        $answer_user->answer_type = 1;
+                        $answer_user->subject_id = "";
+                        $answer_user->unit = $employee->work_unit;
+                        $answer_user->level = "leader";
+                        $answer_user->answer = "Pernah";
+                        $answer_user->created_at = "2018-01-25 22:42:57";
+                        $answer_user->updated_at = "2018-01-25 22:42:57";
+
+                        $answer_user->save();
+
+                        $answer_user = new UserAnswer();
+                        $answer_user->username = $employee->nip;
+                        $answer_user->survey_id = 1;
+                        $answer_user->question_id = 3;
+                        $answer_user->answer_type = 1;
+                        $answer_user->subject_id = "";
+                        $answer_user->unit = $employee->work_unit;
+                        $answer_user->level = "leader";
+                        $answer_user->answer = "Pernah";
+                        $answer_user->created_at = "2018-01-25 22:42:57";
+                        $answer_user->updated_at = "2018-01-25 22:42:57";
+
+                        $answer_user->save();
+
+                        $answer_user = new UserAnswer();
+                        $answer_user->username = $employee->nip;
+                        $answer_user->survey_id = 1;
+                        $answer_user->question_id = 4;
+                        $answer_user->answer_type = 1;
+                        $answer_user->subject_id = "";
+                        $answer_user->unit = $employee->work_unit;
+                        $answer_user->level = "lecture";
+                        $answer_user->answer = "Website USU";
+                        $answer_user->created_at = "2018-01-25 22:42:57";
+                        $answer_user->updated_at = "2018-01-25 22:42:57";
+
+                        $answer_user->save();
+
+                        $answer_user = new UserAnswer();
+                        $answer_user->username = $employee->nip;
+                        $answer_user->survey_id = 1;
+                        $answer_user->question_id = 5;
+                        $answer_user->answer_type = 1;
+                        $answer_user->subject_id = "";
+                        $answer_user->unit = $employee->work_unit;
+                        $answer_user->level = "leader";
+                        $answer_user->answer = "Sangat Paham";
+                        $answer_user->created_at = "2018-01-25 22:42:57";
+                        $answer_user->updated_at = "2018-01-25 22:42:57";
+
+                        $answer_user->save();
+
+                        $answer_user = new UserAnswer();
+                        $answer_user->username = $employee->nip;
+                        $answer_user->survey_id = 1;
+                        $answer_user->question_id = 6;
+                        $answer_user->answer_type = 1;
+                        $answer_user->subject_id = "";
+                        $answer_user->unit = $employee->work_unit;
+                        $answer_user->level = "leader";
+                        $answer_user->answer = "Sangat Paham";
+                        $answer_user->created_at = "2018-01-25 22:42:57";
+                        $answer_user->updated_at = "2018-01-25 22:42:57";
+
+                        $answer_user->save();
+                        $count++;
+                    }else{
+                        // $answer->where('username',$employee->nip)->delete($answer->id);
+                        // $delete++;
+                    }
+            }
+        }
+        echo "jumlah yang bertambah :".$count."\n";
+        echo "jumlah yang berkurang :".$delete;
     }
 }

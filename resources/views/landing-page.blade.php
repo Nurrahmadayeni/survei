@@ -126,7 +126,7 @@
                 <p>SURVEI merupakan sistem informasi yang dirancang untuk memudahkan dalam melakukan survei secara online.</p>
             </div>
             <div class="col-lg-4">
-                <p>Untuk dapat menggunakan SURVEI, dosen/pegawai/mahasiswa harus melakukan login terlebih dahulu. Silahkan klik tombol login di bawah untuk melakukan login.</p>
+                <p>Untuk dapat menggunakan SURVEI, dosen dan pegawai dapat menggunakan akun SIMSDM sedangkan mahasiswa dapat menggunakan akun PORTAL AKADEMIK. Silahkan klik tombol login di bawah untuk melakukan login.</p>
             </div>
         </div>
         <div class="row">

@@ -17,7 +17,7 @@ class IsOperator {
     public function handle($request, Closure $next)
     {
         $user = Auth::user();
-        $is_super = UserAuth::where('username', $user->username)->where('auth_type', 'SU')->first();
+        $is_super = UserAuth::where('username', $user->username)->where('auth_type', 'SU')->orWhere('auth_type', 'SSU')->first();
         $is_operator = UserAuth::where('username', $user->username)->where(function ($query)
         {
             $query->where('auth_type', 'OPU')->orWhere('auth_type', 'OPF');

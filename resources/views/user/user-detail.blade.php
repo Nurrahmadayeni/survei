@@ -96,7 +96,7 @@
                                     <table class="table">
                                         <thead>
                                         <th class="text-center">Otorisasi</th>
-                                        <th class="text-center">Unit/Subunit</th>
+                                        <th class="text-center">Unit / Sub Unit</th>
                                         <th class="text-center">Hapus</th>
                                         </thead>
                                         <tbody>
@@ -104,6 +104,9 @@
                                             <tr class="text-center">
                                                 <td>
                                                     <select name="auth_type[]" type="text" class="form-control select2">
+                                                        @if($auth == "SU")
+                                                            <option value="SU" {{$item['auth_type'] == 'SU' ? 'selected' : null}}>Superuser</option>  
+                                                        @endif
                                                         <option value="OPU" {{$item['auth_type'] == 'OPU' ? 'selected' : null}}>Operator Unit</option>
                                                         <option value="OPF" {{$item['auth_type'] == 'OPF' ? 'selected' : null}}>Operator Fakultas</option>
                                                     </select>

@@ -120,8 +120,10 @@
                                             @endforeach
                                         </select>
                                     </div>
-                                    <button type='button' class='btn btn-success btn-xs btn-slideright selectall'>Select All Unit Kerja</button>
-                                    <button type='button' class='btn btn-danger btn-xs btn-slideright deselectall'>Delect All Unit Kerja</button>
+                                    <div class="form-group">
+                                        <button type='button' class='btn btn-success btn-xs btn-slideright selectall'>Select All Unit Kerja</button>
+                                        <button type='button' class='btn btn-danger btn-xs btn-slideright deselectall'>Delect All Unit Kerja</button>
+                                    </div>
                                 @endif
 
                                 <div id="is_subjective" class="form-group">
@@ -138,8 +140,30 @@
                                     </div>
                                 </div>
 
+                                <div class="form-group" id='subject' {{$survey['is_subject'] == '1' ? null : "style=display:none" }}>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <label for="name-sample" class="control-label">Tahun Ajaran</label>
+                                            <select class="form-control mb-15 select2" name='academic_year' id="pilihan" data-placeholder="-- Pilih Unit Survey --" {{$disabled}} required>
+                                                <option value="" disabled="">-- Pilih Tahun Ajaran --</option>
+                                                @foreach($academic_years as $academic_year)
+                                                    <option value="{{$academic_year}}" {{$survey['academic_year'] == $academic_year ? "selected" : null}}>{{$academic_year}}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="name-sample" class="control-label">Semester </label>
+                                            <select class="form-control mb-15 select2" name='semester' id="pilihan" data-placeholder="-- Pilih Unit Survey --" {{$disabled}} required>
+                                                <option value="" disabled="">-- Pilih Semester --</option>
+                                                <option value="1" {{$survey['semester'] == 1 ? "selected" : null}}>Ganjil</option>
+                                                <option value="2" {{$survey['semester'] == 2 ? "selected" : null}}>Genap</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="form-group" id='sample' {{$survey['is_subject'] == '0' ? null : "style=display:none" }}>
-                                    <label for="name-sample" class="control-label">Sampel: </label>
+                                    <label for="name-sample" class="control-label">Sampel </label>
                                     <div class="ckbox ckbox-theme">
                                         <input id="mhs" class="sample" type="checkbox" name="sample[]" value="student"
                                         {{$survey['sample']->contains('student') == 1 ? 'checked' : null }} {{$disabled}}>

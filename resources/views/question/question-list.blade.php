@@ -129,7 +129,6 @@
                                         <th>Pertanyaan</th>
                                         <th>Jenis Pilihan Jawaban</th>
                                         <th>Pilihan</th>
-                                        <th>Diagram</th>
                                         <th>Aksi</th>
                                     </tr>
                                     </thead>

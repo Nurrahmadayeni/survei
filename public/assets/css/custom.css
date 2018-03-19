@@ -55,6 +55,7 @@
     bottom:0;
 }
 
+
 .button-logout{
     box-sizing: border-box;
     width: 100%;
@@ -69,4 +70,14 @@
 .button-logout:hover{
     background-color: #f5f5f5;
     border-left: 3px solid #496ba6;
+}
+
+.navbar-toolbar .navbar-right .navbar-profile > a .meta .avatar img {
+    width: auto;
+    max-height: 35px;
+}
+
+.sidebar-content img {
+    width: auto;
+    max-height: 50px;
 }

@@ -156,11 +156,11 @@ $(document).ready(function () {
                 {
                     orderable: false,
                     defaultContent: '<a data-toggle="tooltip" data-placement="top" title="Lihat Survey"><button class="btn btn-theme btn-sm rounded answer"><i class="fa fa-eye" style="color:white;"></i></button></a>',
-                    targets: 5
+                    targets: 6
                 },
                 {
                     className: "dt-center",
-                    targets: [1, 3, 4, 5]
+                    targets: [1, 3, 4, 5, 6]
                 },
                 {
                     width: "5%",
@@ -274,11 +274,11 @@ $(document).ready(function () {
             columnDefs: [
                 {
                     orderable: false,
-                    targets: [4,5]
+                    targets: [4]
                 },
                 {
                     className: "dt-center",
-                    targets: [0, 4, 5]
+                    targets: [0, 4]
                 }
             ],
             autoWidth: true,
@@ -316,11 +316,11 @@ $(document).ready(function () {
                 columnDefs: [
                     {
                         orderable: false,
-                        targets: [4,5]
+                        targets: [4]
                     },
                     {
                         className: "dt-center",
-                        targets: [0, 4, 5]
+                        targets: [0, 4]
                     }
                 ],
                 autoWidth: true,
@@ -365,14 +365,17 @@ $(document).ready(function () {
         if(this.value=='0'){
             $('#sample').fadeIn('slow');
             $('#sample').show();
+            $('#subject').fadeOut('slow');
+            $('#subject').hide();
             $("input[name='sample[]']").attr("required", "required");
         }else if(this.value=='1'){
             $("#mhs").prop('checked', false);
             $("#dsn").prop('checked', false);
             $("#pgw").prop('checked', false);
             $('#sample').fadeOut('slow');
-            $("input[name='sample[]']").attr("required",false);
             $('#sample').hide();
+            $("input[name='sample[]']").attr("required",false);
+            $('#subject').show();
         }
     });
 
@@ -387,6 +390,10 @@ $(document).ready(function () {
 
     if ($(".select2").length) {
         $(".select2").select2();
+    }
+
+    if($(".chosen-select").length){
+        $('.chosen-select').chosen();
     }
 
     $(document).on('change','#answer_types',function () {
@@ -521,8 +528,13 @@ $(document).ready(function () {
         }
     });
 
+
     $('#form_question').on('submit', function (e) {
         e.preventDefault();
+
+        var id = $("input[name=survey_id]").val();
+        // var data = $('#form_question').serialize();
+        // alert(data);
         $("#survey-submit").val('Process . . .');
         $("#survey-container").LoadingOverlay("show");
         $.ajax({
@@ -541,10 +553,64 @@ $(document).ready(function () {
                 }else if(result=="success"){
                     $('html, body').animate({ scrollTop: 0 }, 300);
                     notify('Survey berhasil dijawab','success');
-                    setTimeout(function(){ window.open(baseUrl + "survey", "_self"); }, 800);
+                    setTimeout(function(){ window.open(baseUrl + "survey/answer/" + id, "_self"); location.reload(); }, 800);
                 }else{
                     notify('Survey gagal dijawab, silahkan periksa kembali jawaban anda','danger');
                 }
+            }
+        });
+    });
+
+    if ($("#subject").length) {
+        var val = $("#subject").val();
+        var val1 = $("input[name=survey_id]").val();
+        $.ajax({
+            url: baseUrl + 'survey/showAnswer',
+            type:'GET',
+            data: { _token: $('meta[name=csrf-token]').attr('content'), subject_id : val, survey_id :  val1},
+            success:function(result){                    
+                if(result=='null'){
+                    $('#question').fadeIn('slow');
+                    $('#question :checked').removeAttr('checked');
+                    $('#question').find('input:text').val('');
+                    $('#question').find('textarea').val('');
+                    console.log(val);
+                    $('#answerShow').empty();
+                    $('#answerShow').fadeOut('slow');
+                    console.log(result);
+                }else{
+                    $('#question').fadeOut('slow');
+                    $('#answerShow').fadeIn('slow');
+                    $( "#answerShow" ).html( result);
+                    console.log(val);
+                }
+            }
+        });
+    }
+
+    $("#subject").change(function () {
+        var val = $(this).val();
+        var val1 = $("input[name=survey_id]").val();
+        $.ajax({
+            url: baseUrl + 'survey/showAnswer',
+            type:'GET',
+            data: { _token: $('meta[name=csrf-token]').attr('content'), subject_id : val, survey_id :  val1},
+            success:function(result){                    
+                if(result=='null'){
+                    $('#question').fadeIn('slow');
+                    $('#question :checked').removeAttr('checked');
+                    $('#question').find('input:text').val('');
+                    $('#question').find('textarea').val('');
+                    console.log(val);
+                    $('#answerShow').empty();
+                    $('#answerShow').fadeOut('slow');
+                }else{
+                    $('#question').fadeOut('slow');
+                    $('#answerShow').fadeIn('slow');
+                    $( "#answerShow" ).html( result);
+                    console.log(val);
+                }
+                console.log(result);
             }
         });
     });
@@ -572,6 +638,7 @@ $(document).ready(function () {
             }
         });
     });
+
 
     $('#form_copySurvey').on('submit', function (e) {
         e.preventDefault();
@@ -615,7 +682,8 @@ $(document).ready(function () {
         if (element.length) {
             element.datepicker({
                 changeMonth: true,
-                changeYear: true
+                changeYear: true,
+                autoclose:true
             });
         }
         i++;
@@ -686,7 +754,8 @@ $(document).ready(function () {
 
     if ($(".date-picker").length) {
         $(".date-picker").datepicker({
-            format: 'dd-mm-yyyy'
+            format: 'dd-mm-yyyy',
+            autoclose:true
         });
     }
 

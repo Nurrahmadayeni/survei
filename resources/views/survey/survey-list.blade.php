@@ -52,11 +52,14 @@
                     <div class="clearfix"></div>
                 </div><!-- /.panel-heading -->
                 <div class="panel-body">
+                    {{--{{dd($auths)}}--}}
                     <div class="row">
-                        @if(!empty($auths))
-                            @include('survey.survey-list-admin')
-                        @else
+                        @if(empty($auths))
                             @include('survey.survey-list-user')
+                        @elseif($auths=="admin")
+                            @include('survey.survey-list-user')
+                        @else
+                            @include('survey.survey-list-admin')
                         @endif
                     </div><!-- /.row -->
                 </div>

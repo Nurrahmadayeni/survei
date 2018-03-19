@@ -80,7 +80,7 @@
                 <li id="tour-6" class="dropdown navbar-profile">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                                 <span class="meta">
-                                    <span class="avatar"><img src="{{$user_info['photo']}}" class="img-circle" alt="admin" style="width: 32px; height: 32px;"></span>
+                                    <span class="avatar"><img src="{{$user_info['photo']}}" class="img-circle" alt="admin"></span>
                                     <span class="text hidden-xs hidden-sm text-muted" id="u_profile"></span>
                                     <span class="caret"></span>
                                 </span>
@@ -89,7 +89,7 @@
                     <ul class="dropdown-menu animated flipInX">
                         <li>
                             <form action="{{$logoutLink}}" method="post">
-                                <button class="button-logout"><i class="fa fa-sign-out"></i> Logout</button>
+                                <button class="button-logout"><i class="fa fa-sign-out"></i>Logout</button>
                             </form>
                         </li>
                     </ul>

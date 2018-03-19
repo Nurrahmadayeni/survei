@@ -66,7 +66,7 @@
             <div class="panel rounded shadow" id="report_result">
                 <div class="panel-heading">
                     <div class="pull-left">
-                        <h3 class="panel-title">Hasil Laporan</h3>
+                        <h3 class="panel-title">Download Laporan</h3>
                     </div>
                     <div class="pull-right">
                         <button class="btn btn-sm" data-action="collapse" data-container="body"
@@ -79,7 +79,7 @@
                 <div class="panel-body">
                     <div class="form-group container text-center" id="result_container" style="display: none;">
                         <a href="" id="btn-download1"><button name="filter-report" type="button" class="btn btn-lg btn-theme btn-slidedown submit"><i class="fa fa-file-excel-o" aria-hidden="true"></i>
-                                Download Report 1</button></a>
+                                Download Report Datarow</button></a>
                         <a href="" id="btn-download2"><button name="filter-report" type="button" class="btn btn-lg btn-success btn-slidedown submit"><i class="fa fa-file-excel-o" aria-hidden="true"></i>
                             Download Report 2</button></a>
                     </div>

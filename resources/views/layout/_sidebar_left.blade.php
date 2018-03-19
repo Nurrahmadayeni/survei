@@ -27,6 +27,13 @@
             </a>
         </li>
         @can('admin-menu')
+            <li class="submenu {!! Request::is('survey/admin') ? 'active' : null !!}">
+                <a href="{{url('survey/admin')}}">
+                    <span class="icon"><i class="fa fa-list-alt"></i></span>
+                    <span class="text">Jawab Survei</span>
+                    {!! Request::is('survey/admin') ? '<span class="selected"></span>' : null !!}
+                </a>
+            </li>
             <li class="submenu {!! Request::is('survey/report', 'survey/report') ? 'active' : null !!}">
                 <a href="{{url('survey/report')}}">
                     <span class="icon"><i class="fa fa-line-chart"></i></span>
@@ -35,7 +42,7 @@
                 </a>
             </li>
         @endcan
-        @can('SU-menu')
+        @can('SSU-menu')
             <li class="submenu {!! Request::is('users', 'users/*') ? 'active' : null !!}">
                 <a href="javascript:void(0);">
                     <span class="icon"><i class="fa fa-lock"></i></span>
